@@ -704,7 +704,7 @@ const startListeningForMessages = (api) => {
                 headerStyle: 'bold',
                 bodyText: `Hey everyone! Thanks so much for inviting me — I'm thrilled to be here! 🎉\n\nI'm packed with fun commands and features ready to go. Type ${global.getPrefix(threadID)}help anytime to see everything I can do.\n\nLet's have a great time together! 🚀`,
                 bodyStyle: 'sansSerif',
-                footerText: `${global.config.botName} • Powered by Shadow Garden`,
+                footerText: `${global.config.botName}`,
               });
               api.sendMessage(introMsg, threadID);
               try {
