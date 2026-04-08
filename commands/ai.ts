@@ -1,39 +1,89 @@
-import axios from "axios";
-
-namespace ShadowBot {
-  export interface Command {
-    config: {
-      name: string;
-      description: string;
-      usage: string;
-      nonPrefix: boolean;
-    };
-    run: (context: { api: any; event: any; args: string[] }) => Promise<void>;
-  }
-}
+import axios from 'axios';
+import AuroraBetaStyler from '@aurora/styler';
 
 const aiCommand: ShadowBot.Command = {
   config: {
-    name: "ai",
-    description: "Interact with the Gemini Vision API for conversational responses.",
-    usage: "ai <query>",
+    name: 'ai',
+    description: 'Chat with AI',
+    usage: 'ai <message>',
     nonPrefix: true,
   },
-  run: async ({ api, event, args }: { api: any; event: any; args: string[] }) => {
+  run: async ({ api, event, args }) => {
     const { threadID, messageID, senderID } = event;
-    const query = args.join(" ").trim();
+    if (!threadID || !messageID) return;
 
+    const query = args.join(' ').trim();
     if (!query) {
-      return api.sendMessage("Please provide a query.", threadID, messageID);
+      return api.sendMessage(
+        AuroraBetaStyler.styleOutput({
+          headerText: 'Query',
+          headerSymbol: '❌',
+          headerStyle: 'bold',
+          bodyText: 'Please provide a message.',
+          bodyStyle: 'sansSerif',
+          footerText: 'Developed by: **Aljur Pogoy**',
+        }),
+        threadID,
+        messageID
+      );
     }
-// ?ask=Hello&uid=4&apikey=
-    try {
-      const response = await axios.get("https://kaiz-apis.gleeze.com/api/aria", {
+
+    const askAI = async (text: string) => {
+      const res = await axios.get('https://kaiz-apis.mooo.com/api/aria', {
         params: {
-          ask: query, // Changed from 'ask' to 'q' based on the new API
+          ask: text,
           uid: senderID,
-          apikey: "117cafc8-ef3b-4632-bc1c-13b38b912081",
-          // imageUrl is omitted unless you want to add image support
+          apikey: '5bcb48a7-e2a6-4704-ab8e-49e529aadb39',
+        },
+      });
+      return res.data?.response || 'No response.';
+    };
+
+    try {
+      const aiResponse = await askAI(query);
+
+      const styledMessage = AuroraBetaStyler.styleOutput({
+        headerText: 'ARIA AI',
+        headerSymbol: '🤖',
+        headerStyle: 'bold',
+        bodyText: aiResponse,
+        bodyStyle: 'sansSerif',
+        footerText: 'Reply to continue the conversation',
+      });
+
+      let sentMessageID: string;
+
+      await new Promise<void>((resolve) => {
+        api.sendMessage(styledMessage, threadID, (err: any, info: any) => {
+          sentMessageID = info?.messageID;
+          resolve();
+        }, messageID);
+      });
+
+      if (!global.Kagenou.replyListeners) global.Kagenou.replyListeners = new Map();
+
+      const replyHandler = async ({ api, event }: any) => {
+        const { threadID: rThreadID, messageID: rMessageID, body, messageReply } = event;
+        if (rThreadID !== threadID || !messageReply || messageReply.messageID !== sentMessageID) return;
+
+        const followUp = body?.trim();
+        if (!followUp) return;
+
+        try {
+          const nextResponse = await askAI(followUp);
+
+          const nextStyled = AuroraBetaStyler.styleOutput({
+            headerText: 'ARIA AI',
+            headerSymbol: '🤖',
+            headerStyle: 'bold',
+            bodyText: nextResponse,
+            bodyStyle: 'sansSerif',
+            footerText: 'Reply to continue the conversation',
+          });
+
+          let newMessageID: string;
+
+          await new Promise<void>((resolve) => {
         },
       });
       const geminiResponse = response.data.response || "No response from Gemini Vision API.";
