@@ -113,10 +113,9 @@ const aiCommand: ShadowBot.Command = {
         try {
           const followUpResponse = await axios.get("https://kaiz-apis.gleeze.com/api/gemini-vision", {
             params: {
-              q: userReply, // Changed from 'ask' to 'q'
+              q: userReply,
               uid: senderID,
-              apikey: "117cafc8-ef3b-4632-bc1c-13b38b912081",
-              // imageUrl is omitted unless you want to add image support
+              apikey: "5bcb48a7-e2a6-4704-ab8e-49e529aadb39",
             },
           });
           const newGeminiResponse = followUpResponse.data.response || "No response from Gemini Vision API.";
