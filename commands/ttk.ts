@@ -19,7 +19,7 @@ const ttkCommand: ShadowBot.Command = {
     if (!search) {
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "TikTok",
-        headerSymbol: "❌",
+        headerSymbol: "",
         headerStyle: "bold",
         bodyText: "Please provide a search query.\nUsage: ttk <search query>",
         bodyStyle: "sansSerif",
@@ -30,21 +30,22 @@ const ttkCommand: ShadowBot.Command = {
 
     try {
       const { data: json } = await axios.get("https://tikwm.com/api/feed/search", {
-      params: { keywords: search },
-    });
+        params: { keywords: search },
+      });
+
       if (json.code !== 0 || !json.data?.videos?.length) {
         throw new Error("No results found.");
       }
 
       const video = json.data.videos[0];
       const { play, title, music } = video;
-      
-      const vidName = `vid_${crypto.randomUUID()}.mp4`;
-      const vidPath = path.join(process.cwd(), "cache", vidName);
 
-      if (!fs.existsSync(path.join(process.cwd(), "cache"))) {
-        fs.mkdirSync(path.join(process.cwd(), "cache"));
+      const cacheDir = path.join(process.cwd(), "cache");
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir);
       }
+      const vidName = `vid_${crypto.randomUUID()}.mp4`;
+      const vidPath = path.join(cacheDir, vidName);
 
       const vidStream = await axios.get(play, { responseType: "stream" });
       const vidWriter = fs.createWriteStream(vidPath);
@@ -77,7 +78,7 @@ const ttkCommand: ShadowBot.Command = {
         );
       });
       const mp3Name = `aud_${crypto.randomUUID()}.mp3`;
-      const mp3Path = path.join(process.cwd(), "cache", mp3Name);
+      const mp3Path = path.join(cacheDir, mp3Name);
 
       const mp3Stream = await axios.get(music, { responseType: "stream" });
       const mp3Writer = fs.createWriteStream(mp3Path);
@@ -96,7 +97,8 @@ const ttkCommand: ShadowBot.Command = {
             fs.unlinkSync(mp3Path);
             if (err) reject(err);
             else resolve();
-          }
+          },
+          messageID
         );
       });
 
@@ -104,7 +106,7 @@ const ttkCommand: ShadowBot.Command = {
       console.error("TikTok Command Error:", error);
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "TikTok",
-        headerSymbol: "",
+        headerSymbol: "❌",
         headerStyle: "bold",
         bodyText: `Error: ${error.message}`,
         bodyStyle: "sansSerif",
