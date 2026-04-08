@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dongdev/fca-unofficial": "^1.0.19",
+    "@dongdev/fca-unofficial": "^3.0.31",
     "@google/generative-ai": "^0.24.1",
     "@types/axios": "^0.9.36",
     "@types/node": "^18.19.100",
