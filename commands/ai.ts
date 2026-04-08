@@ -84,64 +84,45 @@ const aiCommand: ShadowBot.Command = {
           let newMessageID: string;
 
           await new Promise<void>((resolve) => {
-        },
-      });
-      const geminiResponse = response.data.response || "No response from Gemini Vision API.";
-      const message = `${geminiResponse}\n\nReply to this message to continue the conversation.`;
-
-      let sentMessageID: string;
-      await new Promise((resolve, reject) => {
-        api.sendMessage(message, threadID, (err, messageInfo) => {
-          if (err) {
-            reject(err);
-          } else {
-            sentMessageID = messageInfo.messageID;
-            resolve(messageInfo);
-          }
-        }, messageID);
-      });
-
-      if (!global.Kagenou.replyListeners) {
-        global.Kagenou.replyListeners = new Map();
-      }
-
-      const handleReply = async (ctx: { api: any; event: any; data?: any }) => {
-        const { api, event } = ctx;
-        const { threadID, messageID } = event;
-        const userReply = event.body?.trim() || "";
-
-        try {
-          const followUpResponse = await axios.get("https://kaiz-apis.gleeze.com/api/gemini-vision", {
-            params: {
-              q: userReply,
-              uid: senderID,
-              apikey: "5bcb48a7-e2a6-4704-ab8e-49e529aadb39",
-            },
-          });
-          const newGeminiResponse = followUpResponse.data.response || "No response from Gemini Vision API.";
-          const newMessage = `${newGeminiResponse}\n\nReply to this message to continue the conversation.`;
-
-          let newSentMessageID: string;
-          await new Promise((resolve, reject) => {
-            api.sendMessage(newMessage, threadID, (err, newMessageInfo) => {
-              if (err) {
-                reject(err);
-              } else {
-                newSentMessageID = newMessageInfo.messageID;
-                resolve(newMessageInfo);
-              }
-            }, messageID);
+            api.sendMessage(nextStyled, threadID, (err: any, info: any) => {
+              newMessageID = info?.messageID;
+              resolve();
+            }, rMessageID);
           });
 
-          global.Kagenou.replyListeners.set(newSentMessageID, { callback: handleReply });
-        } catch (error) {
-          api.sendMessage("An error occurred while processing your reply with Gemini Vision API.", threadID, messageID);
+          global.Kagenou.replyListeners.set(newMessageID, { callback: replyHandler });
+          global.Kagenou.replyListeners.delete(sentMessageID);
+          sentMessageID = newMessageID;
+        } catch {
+          await api.sendMessage(
+            AuroraBetaStyler.styleOutput({
+              headerText: 'eRROR',
+              headerSymbol: '❌',
+              headerStyle: 'bold',
+              bodyText: 'Failed to process your message.',
+              bodyStyle: 'sansSerif',
+              footerText: 'Developed by: **Aljur Pogoy**',
+            }),
+            threadID,
+            rMessageID
+          );
         }
       };
 
-      global.Kagenou.replyListeners.set(sentMessageID, { callback: handleReply });
-    } catch (error) {
-      api.sendMessage("An error occurred while contacting the Gemini Vision API.", threadID, messageID);
+      global.Kagenou.replyListeners.set(sentMessageID, { callback: replyHandler });
+    } catch {
+      await api.sendMessage(
+        AuroraBetaStyler.styleOutput({
+          headerText: 'AI ERROR',
+          headerSymbol: '❌',
+          headerStyle: 'bold',
+          bodyText: 'Failed to contact AI.',
+          bodyStyle: 'sansSerif',
+          footerText: 'Developed by: **Aljur Pogoy**',
+        }),
+        threadID,
+        messageID
+      );
     }
   },
 };
