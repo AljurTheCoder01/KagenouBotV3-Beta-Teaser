@@ -3,7 +3,7 @@ const fs = require("fs");
 module.exports = {
     name: "ara",
     author: "VanHung & aljur pogoy",
-    description: "Plays 'Yamete' sound when triggered.",
+    description: "Plays 'ara' sound when triggered.",
     nonPrefix: true,
     async run({ api, event }) {
         const { threadID, messageID, body } = event;
