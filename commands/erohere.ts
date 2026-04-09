@@ -7,7 +7,7 @@ import AuroraBetaStyler from "@aurora/styler";
 const erohereCommand: ShadowBot.Command = {
   config: {
     name: "erohere",
-    description: "Sends a random 18+ image.",
+    description: "Sends a random anime image.",
     usage: "erohere",
     aliases: ["eh", "anime-img"],
     category: "Fun 🎉",
@@ -25,21 +25,34 @@ const erohereCommand: ShadowBot.Command = {
 
       fs.writeFileSync(filePath, Buffer.from(response.data));
 
-      await api.sendMessage(
-        {
-          body: AuroraBetaStyler.styleOutput({
-            headerText: "Erohere",
-            headerSymbol: "🌸",
-            headerStyle: "bold",
-            bodyText: "Here's your random anime image! 💕",
-            bodyStyle: "bold",
-            footerText: "Developed by: **Aljur pogoy**",
-          }),
-          attachment: fs.createReadStream(filePath),
-        },
-        threadID,
-        messageID
-      );
+      const sentInfo = await new Promise<any>((resolve, reject) => {
+        api.sendMessage(
+          {
+            body: AuroraBetaStyler.styleOutput({
+              headerText: "Erohere",
+              headerSymbol: "🌸",
+              headerStyle: "bold",
+              bodyText: "Goon now! 💦💦",
+              bodyStyle: "bold",
+              footerText: "Developed by: **Aljur pogoy**",
+            }),
+            attachment: fs.createReadStream(filePath),
+          },
+          threadID,
+          (err: any, info: any) => { if (err) reject(err); else resolve(info); },
+          messageID
+        );
+      });
+
+      setTimeout(async () => {
+        try {
+          await api.unsendMessage(sentInfo.messageID);
+        } catch {
+          try {
+            await api.deleteMessage(sentInfo.messageID);
+          } catch {}
+        }
+      }, 5000);
     } catch (err: any) {
       await api.sendMessage(
         AuroraBetaStyler.styleOutput({
