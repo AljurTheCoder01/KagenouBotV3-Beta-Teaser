@@ -1,3 +1,4 @@
+
 import AuroraBetaStyler from "@aurora/styler";
 import axios from "axios";
 import fs from "fs";
@@ -37,7 +38,8 @@ const ttkCommand: ShadowBot.Command = {
         throw new Error("No results found.");
       }
 
-      const video = json.data.videos[0];
+      const videos = json.data.videos;
+      const video  = videos[Math.floor(Math.random() * videos.length)];
       const { play, title, music } = video;
 
       const cacheDir = path.join(process.cwd(), "cache");
@@ -69,7 +71,7 @@ const ttkCommand: ShadowBot.Command = {
         api.sendMessage(
           { body: videoMessage, attachment: fs.createReadStream(vidPath) },
           threadID,
-          (err) => {
+          (err: any) => {
             fs.unlinkSync(vidPath);
             if (err) reject(err);
             else resolve();
@@ -77,6 +79,7 @@ const ttkCommand: ShadowBot.Command = {
           messageID
         );
       });
+
       const mp3Name = `aud_${crypto.randomUUID()}.mp3`;
       const mp3Path = path.join(cacheDir, mp3Name);
 
@@ -93,7 +96,7 @@ const ttkCommand: ShadowBot.Command = {
         api.sendMessage(
           { body: "🎵 Audio", attachment: fs.createReadStream(mp3Path) },
           threadID,
-          (err) => {
+          (err: any) => {
             fs.unlinkSync(mp3Path);
             if (err) reject(err);
             else resolve();
@@ -102,7 +105,7 @@ const ttkCommand: ShadowBot.Command = {
         );
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("TikTok Command Error:", error);
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "TikTok",
