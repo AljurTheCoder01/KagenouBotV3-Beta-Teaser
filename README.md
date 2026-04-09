@@ -11,7 +11,7 @@ Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Mess
 
  - **Liane Cagara** — she was the one who really advice me to create and adjust functions and to solve problems on code.
 
-- **Frances Loyd Raval** — He is the one who helping to setup other systems and functions.
+- **Francis Loyd Raval** — He is the one who helping to setup other systems and functions.
 
 - **Kenneth Panio** — He is the one who really advice to modify systems and add functions.
 
