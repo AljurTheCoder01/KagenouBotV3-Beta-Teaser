@@ -31,11 +31,10 @@ const aiCommand: ShadowBot.Command = {
     }
 
     const askAI = async (text: string) => {
-      const res = await axios.get('https://kaiz-apis.mooo.com/api/aria', {
+      const res = await axios.get('https://oreo.gleeze.com/api/aria', {
         params: {
           ask: text,
-          uid: senderID,
-          apikey: '5bcb48a7-e2a6-4704-ab8e-49e529aadb39',
+          stream: false,
         },
       });
       return res.data?.response || 'No response.';
