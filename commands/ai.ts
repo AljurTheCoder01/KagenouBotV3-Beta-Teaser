@@ -37,7 +37,7 @@ const aiCommand: ShadowBot.Command = {
           stream: false,
         },
       });
-      return res.data?.response || 'No response.';
+      return res.data?.answer || 'No response.';
     };
 
     const registerReply = (botMsgID: string) => {
