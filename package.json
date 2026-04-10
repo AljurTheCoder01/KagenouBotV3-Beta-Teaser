@@ -13,6 +13,7 @@
   "dependencies": {
     "@dongdev/fca-unofficial": "^3.0.31",
     "@google/generative-ai": "^0.24.1",
+    "@gpt4free/g4f.dev": "^1.1.2",
     "@types/axios": "^0.9.36",
     "@types/node": "^18.19.100",
     "@xaviabot/fca-unofficial": "^1.4.0",
