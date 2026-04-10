@@ -1,6 +1,6 @@
-import { PollinationsAI } from "@gpt4free/g4f.dev";
+const { PollinationsAI } = require("@gpt4free/g4f.dev");
 
-const aiCommand: ShadowBot.Command = {
+const aiCommand = {
   config: {
     name: "chat",
     aliases: ["gpt"],
@@ -8,7 +8,6 @@ const aiCommand: ShadowBot.Command = {
     author: "Aljur Pogoy",
     role: 0,
   },
-
   run: async ({ api, event, args }) => {
     const { threadID, messageID } = event;
     const prompt = args.join(" ").trim();
@@ -19,18 +18,20 @@ const aiCommand: ShadowBot.Command = {
         threadID,
         messageID
       );
-    }
+    } 
     try {
-      api.sendTypingIndicator(threadID);
       const client = new PollinationsAI();
+
       const res = await client.chat.completions.create({
         model: "gpt-4.1",
-        messages: [{ role: "user", content: prompt }],
-      });
+        messages: [
+          { role: "user", content: prompt }
+        ],
+      });   
       const yasis =
-        res?.choices?.[0]?.message?.content || "No res.";
-      await api.sendMessage(yasis, threadID, messageID);
-    } catch (error: any) {
+        res?.choices?.[0]?.message?.content || "No response from AI.";
+      await api.sendMessage(reply, threadID, messageID);
+    } catch (error) {
       await api.sendMessage(
         `Error: ${error.message}`,
         threadID,
@@ -40,4 +41,4 @@ const aiCommand: ShadowBot.Command = {
   },
 };
 
-export default aiCommand;
+module.exports = aiCommand;
