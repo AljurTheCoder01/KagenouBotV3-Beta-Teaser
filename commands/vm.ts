@@ -2,7 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import AuroraBetaStyler from "@aurora/styler";
 
 
