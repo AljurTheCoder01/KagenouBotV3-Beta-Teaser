@@ -1,37 +1,37 @@
-
 import axios from "axios";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import cheerio from "cheerio";
 import AuroraBetaStyler from "@aurora/styler";
+
 
 const vmCommand: ShadowBot.Command = {
   config: {
     name: "vm",
-    description: "Search and send a random vm.",
-    usage: "vm <search query>",
+    description: "Search and send a random voice/audio message.",
+    usage: "/vm <search query>",
     aliases: ["voicemsg", "audio"],
     category: "Fun 🎉",
   },
 
   run: async ({ api, event, args }) => {
     const { threadID, messageID } = event;
-
     const query = args.join(" ").trim();
+
     if (!query) {
-      await api.sendMessage(
+      return api.sendMessage(
         AuroraBetaStyler.styleOutput({
           headerText: "Voice Message",
           headerSymbol: "🎙️",
           headerStyle: "bold",
-          bodyText: "Please provide a search query.\nUsage: /vm <search query>\nExample: /vm fahhh",
+          bodyText: "Please provide a search query.\nExample: /vm bruh",
           bodyStyle: "sansSerif",
           footerText: "Developed by: **Aljur pogoy**",
         }),
         threadID,
         messageID
       );
-      return;
     }
 
     const cacheDir = path.join(process.cwd(), "cache");
@@ -40,14 +40,41 @@ const vmCommand: ShadowBot.Command = {
     const filePath = path.join(cacheDir, `vm_${crypto.randomUUID()}.mp3`);
 
     try {
-      const { data } = await axios.get(
-        "https://myinstans-api-1--aljurdev.replit.app/search",
-        { params: { name: query } }
-      );
+      const url = `https://www.myinstants.com/search/?name=${encodeURIComponent(query)}`;
 
-      const results = data?.results;
-      if (!results || !results.length) {
-        await api.sendMessage(
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Referer": "https://www.myinstants.com/",
+        },
+        timeout: 15000,
+      });
+
+      const $ = cheerio.load(response.data);
+      const results: { name: string; url: string }[] = [];
+
+      $(".instant").each((_, elem) => {
+        const name = $(elem).find(".instant-link").text().trim();
+        const onclick = $(elem).find(".small-button").attr("onclick");
+
+        if (onclick) {
+          const match = onclick.match(/play\('(.*?)'\)/);
+          if (match && match[1]) {
+            results.push({
+              name: name || "Unknown",
+              url: "https://www.myinstants.com" + match[1],
+            });
+          }
+        }
+      });
+
+      if (!results.length) {
+        return api.sendMessage(
           AuroraBetaStyler.styleOutput({
             headerText: "Voice Message",
             headerSymbol: "❌",
@@ -59,31 +86,19 @@ const vmCommand: ShadowBot.Command = {
           threadID,
           messageID
         );
-        return;
       }
 
       const picked = results[Math.floor(Math.random() * results.length)];
-      const mp3Url = picked?.url;
 
-      if (!mp3Url) {
-        await api.sendMessage(
-          AuroraBetaStyler.styleOutput({
-            headerText: "Voice Message",
-            headerSymbol: "❌",
-            headerStyle: "bold",
-            bodyText: "Could not extract audio URL from the result.",
-            bodyStyle: "sansSerif",
-            footerText: "Developed by: **Aljur pogoy**",
-          }),
-          threadID,
-          messageID
-        );
-        return;
-      }
+      const audio = await axios.get(picked.url, {
+        responseType: "stream",
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
 
-      const audioStream = await axios.get(mp3Url, { responseType: "stream" });
       const writer = fs.createWriteStream(filePath);
-      audioStream.data.pipe(writer);
+      audio.data.pipe(writer);
 
       await new Promise<void>((resolve, reject) => {
         writer.on("finish", resolve);
@@ -97,7 +112,7 @@ const vmCommand: ShadowBot.Command = {
               headerText: "Voice Message",
               headerSymbol: "🎙️",
               headerStyle: "bold",
-              bodyText: `🔍 Query: ${query}\n🎲 Picked 1 of ${results.length} result(s)`,
+              bodyText: `🔍 Query: ${query}\n🎵 ${picked.name}\n🎲 ${results.length} result(s)`,
               bodyStyle: "sansSerif",
               footerText: "Developed by: **Aljur pogoy**",
             }),
@@ -105,7 +120,7 @@ const vmCommand: ShadowBot.Command = {
           },
           threadID,
           (err: any) => {
-            if (fs.existsSync(filePath)) try { fs.unlinkSync(filePath); } catch {}
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             if (err) reject(err);
             else resolve();
           },
@@ -114,8 +129,9 @@ const vmCommand: ShadowBot.Command = {
       });
 
     } catch (err: any) {
-      if (fs.existsSync(filePath)) try { fs.unlinkSync(filePath); } catch {}
-      await api.sendMessage(
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+      api.sendMessage(
         AuroraBetaStyler.styleOutput({
           headerText: "Voice Message",
           headerSymbol: "❌",
