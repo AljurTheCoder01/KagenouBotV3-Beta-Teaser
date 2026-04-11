@@ -41,7 +41,7 @@ const vmCommand: ShadowBot.Command = {
 
     try {
       const { data } = await axios.get(
-        "https://myinstans-api.onrender.com/search",
+        "https://myinstans-api-1--aljurdev.replit.app/search",
         { params: { name: query } }
       );
 
