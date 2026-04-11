@@ -3,78 +3,48 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import AuroraBetaStyler from "@aurora/styler";
 
-const PROXY_LISTS = [
-  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
-  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt",
-  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
-];
+const PROXY = ""; 
 
-let proxyCache: string[] = [];
-
-async function loadProxies() {
-  if (proxyCache.length) return proxyCache;
-
-  const data = await Promise.all(
-    PROXY_LISTS.map(url =>
-      axios.get(url).then(r => r.data).catch(() => "")
-    )
-  );
-
-  proxyCache = data
-    .join("\n")
-    .split("\n")
-    .map(p => p.trim())
-    .filter(p => p && p.includes(":"));
-
-  return proxyCache;
+function getAgent() {
+  if (!PROXY) return null;
+  return new HttpsProxyAgent(`http://${PROXY}`);
 }
 
-function pickProxy(proxies: string[]) {
-  return proxies[Math.floor(Math.random() * proxies.length)];
+async function fetchHTML(url: string) {
+  const agent = getAgent();
+
+  const res = await axios.get(url, {
+    httpAgent: agent || undefined,
+    httpsAgent: agent || undefined,
+    timeout: 10000,
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept":
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Referer": "https://www.myinstants.com/"
+    },
+    validateStatus: () => true
+  });
+
+  if (res.status !== 200) throw new Error("Failed to fetch page");
+  return res.data;
 }
 
-async function fetchHTML(url: string, proxies: string[]) {
-  for (let i = 0; i < 20; i++) {
-    const proxy = pickProxy(proxies);
-
-    try {
-      const res = await axios.get(url, {
-        proxy: {
-          host: proxy.split(":")[0],
-          port: Number(proxy.split(":")[1]),
-        },
-        timeout: 8000,
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept":
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Referer": "https://www.myinstants.com/"
-        },
-        validateStatus: () => true
-      });
-
-      if (res.status === 200 && res.data) return res.data;
-    } catch {}
-  }
-
-  throw new Error("All proxies failed");
-}
-
-
-const vmCommand: ShadowBot.Command = {
+const vmCommand = {
   config: {
     name: "vm",
     description: "Search and send a random voice/audio message.",
-    usage: "vm <search query>",
+    usage: "/vm <search query>",
     aliases: ["voicemsg", "audio"],
     category: "Fun 🎉",
   },
 
-  run: async ({ api, event, args }) => {
+  run: async ({ api, event, args }: any) => {
     const { threadID, messageID } = event;
     const query = args.join(" ").trim();
 
@@ -99,11 +69,8 @@ const vmCommand: ShadowBot.Command = {
     const filePath = path.join(cacheDir, `vm_${crypto.randomUUID()}.mp3`);
 
     try {
-      const proxies = await loadProxies();
-      if (!proxies.length) throw new Error("No proxies loaded");
-
       const url = `https://www.myinstants.com/search/?name=${encodeURIComponent(query)}`;
-      const html = await fetchHTML(url, proxies);
+      const html = await fetchHTML(url);
 
       const $ = cheerio.load(html);
       const results: { name: string; url: string }[] = [];
@@ -179,7 +146,7 @@ const vmCommand: ShadowBot.Command = {
         messageID
       );
     }
-  },
+  }
 };
 
 export default vmCommand;
