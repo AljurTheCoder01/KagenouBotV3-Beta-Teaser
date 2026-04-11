@@ -3,14 +3,73 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import { SocksProxyAgent } from "socks-proxy-agent";
 import AuroraBetaStyler from "@aurora/styler";
 
+const PROXY_SOURCES = [
+  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
+  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt",
+  "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
+];
+
+let proxyCache: string[] = [];
+
+async function loadProxies() {
+  if (proxyCache.length) return proxyCache;
+  const lists = await Promise.all(
+    PROXY_SOURCES.map(url => axios.get(url).then(r => r.data).catch(() => ""))
+  );
+  proxyCache = lists.join("\n").split("\n").map(p => p.trim()).filter(Boolean);
+  return proxyCache;
+}
+
+function getAgent(proxy: string) {
+  if (proxy.startsWith("socks")) return new SocksProxyAgent(proxy);
+  return new HttpsProxyAgent("http://" + proxy);
+}
+
+async function tryFetch(url: string, proxy: string) {
+  try {
+    const agent = getAgent(proxy);
+    const res = await axios.get(url, {
+      httpAgent: agent,
+      httpsAgent: agent,
+      timeout: 8000,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept":
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.myinstants.com/"
+      },
+      validateStatus: () => true
+    });
+    if (res.status === 200 && res.data) return res.data;
+  } catch {}
+  return null;
+}
+
+async function fetchHTML(url: string, proxies: string[]) {
+  const shuffled = proxies.sort(() => 0.5 - Math.random()).slice(0, 25);
+
+  const tasks = shuffled.map(p => tryFetch(url, p));
+
+  const results = await Promise.all(tasks);
+  const success = results.find(r => r);
+
+  if (!success) throw new Error("All proxies failed");
+
+  return success;
+}
 
 const vmCommand: ShadowBot.Command = {
   config: {
     name: "vm",
     description: "Search and send a random voice/audio message.",
-    usage: "/vm <search query>",
+    usage: "vm <search query>",
     aliases: ["voicemsg", "audio"],
     category: "Fun 🎉",
   },
@@ -25,7 +84,7 @@ const vmCommand: ShadowBot.Command = {
           headerText: "Voice Message",
           headerSymbol: "🎙️",
           headerStyle: "bold",
-          bodyText: "Please provide a search query.\nExample: /vm bruh",
+          bodyText: "Please provide a search query.",
           bodyStyle: "sansSerif",
           footerText: "Developed by: **Aljur pogoy**",
         }),
@@ -40,31 +99,21 @@ const vmCommand: ShadowBot.Command = {
     const filePath = path.join(cacheDir, `vm_${crypto.randomUUID()}.mp3`);
 
     try {
+      const proxies = await loadProxies();
+      if (!proxies.length) throw new Error("No proxies");
+
       const url = `https://www.myinstants.com/search/?name=${encodeURIComponent(query)}`;
+      const html = await fetchHTML(url, proxies);
 
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept":
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Referer": "https://www.myinstants.com/",
-        },
-        timeout: 15000,
-      });
-
-      const $ = cheerio.load(response.data);
+      const $ = cheerio.load(html);
       const results: { name: string; url: string }[] = [];
 
-      $(".instant").each((_, elem) => {
-        const name = $(elem).find(".instant-link").text().trim();
-        const onclick = $(elem).find(".small-button").attr("onclick");
-
+      $(".instant").each((_, el) => {
+        const name = $(el).find(".instant-link").text().trim();
+        const onclick = $(el).find(".small-button").attr("onclick");
         if (onclick) {
           const match = onclick.match(/play\('(.*?)'\)/);
-          if (match && match[1]) {
+          if (match?.[1]) {
             results.push({
               name: name || "Unknown",
               url: "https://www.myinstants.com" + match[1],
@@ -73,46 +122,31 @@ const vmCommand: ShadowBot.Command = {
         }
       });
 
-      if (!results.length) {
-        return api.sendMessage(
-          AuroraBetaStyler.styleOutput({
-            headerText: "Voice Message",
-            headerSymbol: "❌",
-            headerStyle: "bold",
-            bodyText: `No results found for "${query}".`,
-            bodyStyle: "sansSerif",
-            footerText: "Developed by: **Aljur pogoy**",
-          }),
-          threadID,
-          messageID
-        );
-      }
+      if (!results.length) throw new Error("No results");
 
       const picked = results[Math.floor(Math.random() * results.length)];
 
       const audio = await axios.get(picked.url, {
         responseType: "stream",
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-        },
+        headers: { "User-Agent": "Mozilla/5.0" },
       });
 
       const writer = fs.createWriteStream(filePath);
       audio.data.pipe(writer);
 
-      await new Promise<void>((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
+      await new Promise<void>((res, rej) => {
+        writer.on("finish", res);
+        writer.on("error", rej);
       });
 
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((res, rej) => {
         api.sendMessage(
           {
             body: AuroraBetaStyler.styleOutput({
               headerText: "Voice Message",
               headerSymbol: "🎙️",
               headerStyle: "bold",
-              bodyText: `🔍 Query: ${query}\n🎵 ${picked.name}\n🎲 ${results.length} result(s)`,
+              bodyText: `🔍 ${query}\n🎵 ${picked.name}`,
               bodyStyle: "sansSerif",
               footerText: "Developed by: **Aljur pogoy**",
             }),
@@ -121,8 +155,8 @@ const vmCommand: ShadowBot.Command = {
           threadID,
           (err: any) => {
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            if (err) reject(err);
-            else resolve();
+            if (err) rej(err);
+            else res();
           },
           messageID
         );
@@ -136,7 +170,7 @@ const vmCommand: ShadowBot.Command = {
           headerText: "Voice Message",
           headerSymbol: "❌",
           headerStyle: "bold",
-          bodyText: `Error: ${err.message}`,
+          bodyText: err.message,
           bodyStyle: "sansSerif",
           footerText: "Developed by: **Aljur pogoy**",
         }),
