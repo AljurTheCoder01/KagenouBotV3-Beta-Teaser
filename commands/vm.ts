@@ -3,11 +3,9 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { SocksProxyAgent } from "socks-proxy-agent";
 import AuroraBetaStyler from "@aurora/styler";
 
-const PROXY_SOURCES = [
+const PROXY_LISTS = [
   "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt",
   "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks4.txt",
   "https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
@@ -17,53 +15,55 @@ let proxyCache: string[] = [];
 
 async function loadProxies() {
   if (proxyCache.length) return proxyCache;
-  const lists = await Promise.all(
-    PROXY_SOURCES.map(url => axios.get(url).then(r => r.data).catch(() => ""))
+
+  const data = await Promise.all(
+    PROXY_LISTS.map(url =>
+      axios.get(url).then(r => r.data).catch(() => "")
+    )
   );
-  proxyCache = lists.join("\n").split("\n").map(p => p.trim()).filter(Boolean);
+
+  proxyCache = data
+    .join("\n")
+    .split("\n")
+    .map(p => p.trim())
+    .filter(p => p && p.includes(":"));
+
   return proxyCache;
 }
 
-function getAgent(proxy: string) {
-  if (proxy.startsWith("socks")) return new SocksProxyAgent(proxy);
-  return new HttpsProxyAgent("http://" + proxy);
-}
-
-async function tryFetch(url: string, proxy: string) {
-  try {
-    const agent = getAgent(proxy);
-    const res = await axios.get(url, {
-      httpAgent: agent,
-      httpsAgent: agent,
-      timeout: 8000,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept":
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://www.myinstants.com/"
-      },
-      validateStatus: () => true
-    });
-    if (res.status === 200 && res.data) return res.data;
-  } catch {}
-  return null;
+function pickProxy(proxies: string[]) {
+  return proxies[Math.floor(Math.random() * proxies.length)];
 }
 
 async function fetchHTML(url: string, proxies: string[]) {
-  const shuffled = proxies.sort(() => 0.5 - Math.random()).slice(0, 25);
+  for (let i = 0; i < 20; i++) {
+    const proxy = pickProxy(proxies);
 
-  const tasks = shuffled.map(p => tryFetch(url, p));
+    try {
+      const res = await axios.get(url, {
+        proxy: {
+          host: proxy.split(":")[0],
+          port: Number(proxy.split(":")[1]),
+        },
+        timeout: 8000,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Referer": "https://www.myinstants.com/"
+        },
+        validateStatus: () => true
+      });
 
-  const results = await Promise.all(tasks);
-  const success = results.find(r => r);
+      if (res.status === 200 && res.data) return res.data;
+    } catch {}
+  }
 
-  if (!success) throw new Error("All proxies failed");
-
-  return success;
+  throw new Error("All proxies failed");
 }
+
 
 const vmCommand: ShadowBot.Command = {
   config: {
@@ -100,7 +100,7 @@ const vmCommand: ShadowBot.Command = {
 
     try {
       const proxies = await loadProxies();
-      if (!proxies.length) throw new Error("No proxies");
+      if (!proxies.length) throw new Error("No proxies loaded");
 
       const url = `https://www.myinstants.com/search/?name=${encodeURIComponent(query)}`;
       const html = await fetchHTML(url, proxies);
@@ -111,6 +111,7 @@ const vmCommand: ShadowBot.Command = {
       $(".instant").each((_, el) => {
         const name = $(el).find(".instant-link").text().trim();
         const onclick = $(el).find(".small-button").attr("onclick");
+
         if (onclick) {
           const match = onclick.match(/play\('(.*?)'\)/);
           if (match?.[1]) {
@@ -122,7 +123,7 @@ const vmCommand: ShadowBot.Command = {
         }
       });
 
-      if (!results.length) throw new Error("No results");
+      if (!results.length) throw new Error("No results found");
 
       const picked = results[Math.floor(Math.random() * results.length)];
 
@@ -134,12 +135,12 @@ const vmCommand: ShadowBot.Command = {
       const writer = fs.createWriteStream(filePath);
       audio.data.pipe(writer);
 
-      await new Promise<void>((res, rej) => {
-        writer.on("finish", res);
-        writer.on("error", rej);
+      await new Promise<void>((resolve, reject) => {
+        writer.on("finish", resolve);
+        writer.on("error", reject);
       });
 
-      await new Promise<void>((res, rej) => {
+      await new Promise<void>((resolve, reject) => {
         api.sendMessage(
           {
             body: AuroraBetaStyler.styleOutput({
@@ -155,8 +156,8 @@ const vmCommand: ShadowBot.Command = {
           threadID,
           (err: any) => {
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            if (err) rej(err);
-            else res();
+            if (err) reject(err);
+            else resolve();
           },
           messageID
         );
