@@ -482,9 +482,10 @@ const handleMessage = async (api, event) => {
     }
 
     const cooldown = command.config?.cooldown ?? command.cooldown ?? 0;
+    const effectiveCooldown = cooldown ?? 5;
     const cooldownMessage = checkCooldown(senderID, commandName, cooldown || 3);
     if (cooldownMessage) return sendMessage(api, { threadID, message: cooldownMessage, messageID });
-    setCooldown(senderID, commandName, cooldown || 3);
+    setCooldown(senderID, commandName, effectiveCooldown);
 
     try {
       global.trackUsage(commandName);
