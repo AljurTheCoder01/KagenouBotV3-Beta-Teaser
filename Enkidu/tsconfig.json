@@ -13,6 +13,8 @@
       "@core/*": ["CORE/*"],
       "@plugins/*": ["plugins/*"],
       "@commands/*": ["commands/*"]
+      "@aurora/styler": ["plugins/aurora-styler"]
+      }
     },
     "typeRoots": ["./node_modules/@types", "./CORE"],
     "skipLibCheck": true,
