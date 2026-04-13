@@ -4,9 +4,10 @@
 */
 "use strict";
 
-require("tsconfig-paths").register({ baseUrl: __dirname, paths: require("./tsconfig.json").compilerOptions.paths });
-require("ts-node").register({ project: __dirname + "/tsconfig.json", transpileOnly: true });
+require("tsconfig-paths").register();
+require("ts-node").register();
 require("./CORE/global.ts");
+require("./CORE/global.d.ts");
 
 const fs = require("fs-extra");
 const path = require("path");
