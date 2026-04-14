@@ -12,7 +12,7 @@
     "paths": {
       "@core/*": ["CORE/*"],
       "@plugins/*": ["plugins/*"],
-      "@commands/*": ["commands/*"]
+      "@commands/*": ["commands/*"],
       "@aurora/styler": ["plugins/aurora-styler"]
       }
     },
