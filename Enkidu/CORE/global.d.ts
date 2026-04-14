@@ -41,12 +41,6 @@ export interface EnkiduReactionContext {
   senderID: string;
 }
 
-export interface EnkiduEventContext {
-  api: any;
-  event: EnkiduEvent;
-  db: EnkiduDB | null;
-}
-
 export interface EnkiduEvent {
   type: string;
   threadID: string;
@@ -91,7 +85,7 @@ export interface EnkiduConfig {
   Prefix: string[];
   botName: string;
   mongoUri: string | null;
-  replyTimeout?: number;
+  EnkiduPrefix: string;
   [key: string]: any;
 }
 
@@ -100,7 +94,6 @@ declare global {
     interface Command {
       config: EnkiduCommandConfig;
       run(ctx: EnkiduRunContext): Promise<void> | void;
-      handleEvent?(ctx: EnkiduEventContext): Promise<void> | void;
       handleReply?(ctx: EnkiduReplyContext): Promise<void> | void;
       handleReaction?(ctx: EnkiduReactionContext): Promise<void> | void;
     }
@@ -109,14 +102,12 @@ declare global {
   var db: EnkiduDB | null;
   var config: EnkiduConfig;
   var botApi: any;
-  var appState: any;
   var maintenanceMode: boolean;
   var profanityFilter: any;
   var profanityEnabled: boolean;
 
   var commands: Map<string, EnkiduBot.Command>;
   var nonPrefixCommands: Map<string, EnkiduBot.Command>;
-  var eventCommands: EnkiduBot.Command[];
 
   var usersData: Map<string, any>;
   var globalData: Map<string, any>;
@@ -146,5 +137,7 @@ declare global {
   function getLevel(userID: string): Promise<number>;
   function reloadCommands(): void;
 }
+
+export const REPLY_TIMEOUT: number;
 
 export {};
