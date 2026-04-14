@@ -15,13 +15,13 @@ const scriptsDir = path.join(__dirname, "cmdFile", "scripts");
 try {
   const cfg = JSON.parse(fs.readFileSync(configFile, "utf8"));
   global.config = {
-    admins: cfg.admins       || [],
-    moderators: cfg.moderators   || [],
-    developers: cfg.developers   || [],
-    vips: cfg.vips         || [],
-    EnkiduPrefix: Array.isArray(cfg.Prefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
-    botName: cfg.botName      || "EnkiduBot",
-    mongoUri: cfg.mongoUri     || null,
+    admins:       cfg.admins       || [],
+    moderators:   cfg.moderators   || [],
+    developers:   cfg.developers   || [],
+    vips:         cfg.vips         || [],
+    Prefix:       Array.isArray(cfg.Prefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
+    botName:      cfg.botName      || "EnkiduBot",
+    mongoUri:     cfg.mongoUri     || null,
     EnkiduPrefix: cfg.EnkiduPrefix || "/",
     ...cfg,
   };
