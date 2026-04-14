@@ -19,7 +19,7 @@ try {
     moderators: cfg.moderators   || [],
     developers: cfg.developers   || [],
     vips: cfg.vips         || [],
-    Prefix: Array.isArray(cfg.Prefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
+    Prefix: Array.isArray(cfg.EnkiduPrefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
     botName: cfg.botName      || "EnkiduBot",
     mongoUri: cfg.mongoUri     || null,
     EnkiduPrefix: cfg.EnkiduPrefix || "/",
