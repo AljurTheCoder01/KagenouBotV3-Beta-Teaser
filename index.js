@@ -15,6 +15,7 @@ const path = require("path");
 const login = require("@dongdev/fca-unofficial");
 const { handleAuroraCommand, loadAuroraCommands } = require("./core/aurora");
 const chalk = require("chalk");
+const enkidu = require("./Enkidu/index");
 /*const chokidar = require("chokidar");*/
 
 /* @GlobalVar */
