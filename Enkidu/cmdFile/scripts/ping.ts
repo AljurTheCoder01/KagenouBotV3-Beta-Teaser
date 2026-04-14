@@ -21,7 +21,7 @@ const ping: EnkiduBot.Command = {
         headerStyle:  "bold",
         bodyText:     `Response time: **${Date.now() - start}ms**\nBot is **online** and running.`,
         bodyStyle:    "sansSerif",
-        footerText:   `***EnkiduBot*** • ${global.config.botName}`,
+        footerText:   `***EnkiduBot***`,
       }),
       event.threadID, event.messageID
     );
