@@ -740,6 +740,7 @@ const startListeningForMessages = (api) => {
           }
         }
       }
+    enkidu.onEvent(api, event);
     } catch (error) {
       console.error("Error in message listener:", error);
     }
@@ -783,6 +784,7 @@ const startBot = async () => {
       autoMarkRead: false,
     });
     global.botApi = api;
+    enkidu.init(api);  
     startListeningWithAutoRestart(api);
   });
 };
