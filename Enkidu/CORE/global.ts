@@ -1,10 +1,8 @@
 import chalk from "chalk";
 import path from "path";
 import fs from "fs-extra";
-/*
-* hardcoded reply timeout dawg...
-*/
-export const REPLY_TIMEOUT = 600;
+
+export const REPLY_TIMEOUT = 300;
 
 global.commands          = new Map();
 global.nonPrefixCommands = new Map();
@@ -48,7 +46,7 @@ global.getPrefix = (threadID: string): string => {
 };
 
 global.setPrefix = (threadID: string, prefix: string): void => {
-  const cfg = global.threadConfigs.get(threadID) || {};
+  const cfg: { prefix?: string; [key: string]: any } = global.threadConfigs.get(threadID) || {};
   cfg.prefix = prefix;
   global.threadConfigs.set(threadID, cfg);
 };
