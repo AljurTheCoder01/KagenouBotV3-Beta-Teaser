@@ -1,35 +1,28 @@
-/*
-*@Notice will have new Chatbot system.
-*
-*/
 "use strict";
 
 require("tsconfig-paths").register();
 require("ts-node").register();
 require("./CORE/global.ts");
-require("./CORE/global.d.ts");
-
+require("./CORE/global.d.ts")
 const fs = require("fs-extra");
 const path = require("path");
 const AuroraStyler = require("./plugins/aurora-styler.js");
 
 const ROOT = path.join(__dirname, "..");
 const configFile = path.join(ROOT, "config.json");
-const bannedUsersFile = path.join(ROOT, "database", "bannedUsers.json");
-const scriptDir = path.join(__dirname, "commands", "script");
-const eventDir = path.join(__dirname, "commands", "event");
+const scriptsDir = path.join(__dirname, "cmdFile", "scripts");
 
 try {
   const cfg = JSON.parse(fs.readFileSync(configFile, "utf8"));
   global.config = {
-    admins:       cfg.admins       || [],
-    moderators:   cfg.moderators   || [],
-    developers:   cfg.developers   || [],
-    vips:         cfg.vips         || [],
-    Prefix:       Array.isArray(cfg.Prefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
-    botName:      cfg.botName      || "EnkiduBot",
-    mongoUri:     cfg.mongoUri     || null,
-    replyTimeout: cfg.replyTimeout || 600,
+    admins: cfg.admins       || [],
+    moderators: cfg.moderators   || [],
+    developers: cfg.developers   || [],
+    vips: cfg.vips         || [],
+    Prefix: Array.isArray(cfg.Prefix) && cfg.Prefix.length ? cfg.Prefix : ["/"],
+    botName: cfg.botName      || "EnkiduBot",
+    mongoUri: cfg.mongoUri     || null,
+    EnkiduPrefix: cfg.EnkiduPrefix || "/",
     ...cfg,
   };
   global.log.success("[ENKIDU:CONFIG] Loaded.");
@@ -52,12 +45,14 @@ function validateCommand(config, file) {
   }
 }
 
-function loadCommandsFromDir(dir) {
-  if (!fs.existsSync(dir)) return;
-  const files = fs.readdirSync(dir).filter(f => f.endsWith(".js") || f.endsWith(".ts"));
+function loadCommands() {
+  global.commands.clear();
+  global.nonPrefixCommands.clear();
+  if (!fs.existsSync(scriptsDir)) return;
+  const files = fs.readdirSync(scriptsDir).filter(f => f.endsWith(".js") || f.endsWith(".ts"));
   for (const file of files) {
     try {
-      const filePath = path.join(dir, file);
+      const filePath = path.join(scriptsDir, file);
       delete require.cache[require.resolve(filePath)];
       const mod     = require(filePath);
       const command = mod.default || mod;
@@ -69,32 +64,18 @@ function loadCommandsFromDir(dir) {
         command.config.aliases.forEach(a => global.commands.set(a.toLowerCase(), command));
       }
       if (command.config.nonPrefix) global.nonPrefixCommands.set(name, command);
-      if (typeof command.handleEvent === "function") global.eventCommands.push(command);
     } catch (err) {
       global.log.error(`[ENKIDU:LOADER] '${file}': ${err.message}`);
     }
   }
-}
-
-function loadCommands() {
-  global.commands.clear();
-  global.nonPrefixCommands.clear();
-  global.eventCommands.length = 0;
-  loadCommandsFromDir(scriptDir);
-  loadCommandsFromDir(eventDir);
-  global.log.success(`[ENKIDU:LOADER] ${global.commands.size} commands | ${global.nonPrefixCommands.size} non-prefix | ${global.eventCommands.length} event handlers.`);
+  global.log.success(`[ENKIDU:LOADER] ${global.commands.size} commands | ${global.nonPrefixCommands.size} non-prefix.`);
 }
 
 global.reloadCommands = loadCommands;
 
-let bannedCache = {};
-function loadBannedUsers() {
-  try { bannedCache = JSON.parse(fs.readFileSync(bannedUsersFile, "utf8")); } catch { bannedCache = {}; }
-}
-
 async function isUserBanned(senderID) {
-  if (global.db) return await global.db.db("bannedUsers").findOne({ userId: String(senderID) });
-  return bannedCache[String(senderID)] || null;
+  if (!global.db) return null;
+  return await global.db.db("bannedUsers").findOne({ userId: String(senderID) });
 }
 
 function setCooldown(userID, commandName, seconds) {
@@ -106,28 +87,6 @@ function checkCooldown(userID, commandName) {
   if (expiry && Date.now() < expiry) return Math.ceil((expiry - Date.now()) / 1000);
   return 0;
 }
-
-const sendMessage = (api, opts) => new Promise((resolve, reject) => {
-  const { threadID, message, messageID, senderID, attachment, onReply, replyData, keepReply = false } = opts;
-  if (!threadID) return reject(new Error("threadID required"));
-  if (!message && !attachment) return resolve(null);
-  let finalMessage = message || "";
-  if (global.profanityFilter && global.profanityEnabled && finalMessage) {
-    try { finalMessage = global.profanityFilter.clean(finalMessage); } catch (_) {}
-  }
-  api.sendMessage({ body: finalMessage, attachment }, threadID, (err, info) => {
-    if (err) return reject(err);
-    if (typeof onReply === "function" && info?.messageID) {
-      global.replyListeners.set(info.messageID, {
-        callback: onReply,
-        author:   senderID,
-        data:     replyData || {},
-        keep:     keepReply,
-      });
-    }
-    resolve(info);
-  }, messageID || null);
-});
 
 async function handleReply(api, event) {
   const repliedToID = event.messageReply?.messageID;
@@ -157,16 +116,6 @@ async function handleReaction(api, event) {
     await entry.callback({ api, event, reaction, threadID, messageID, senderID });
   } catch (err) {
     global.log.error("[ENKIDU:REACTION] " + err.message);
-  }
-}
-
-async function handleEvent(api, event) {
-  for (const cmd of global.eventCommands) {
-    try {
-      if (typeof cmd.handleEvent === "function") await cmd.handleEvent({ api, event, db: global.db });
-    } catch (err) {
-      global.log.error(`[ENKIDU:EVENT] ${cmd.config?.name}: ${err.message}`);
-    }
   }
 }
 
@@ -213,7 +162,7 @@ async function handleMessage(api, event) {
     return api.sendMessage(
       AuroraStyler.styleOutput({
         headerText: "Access Denied", headerSymbol: "🚫", headerStyle: "bold",
-        bodyText:   `You are banned from **EnkiduBot**.\n\n📌 Reason: ${bannedEntry.reason || "No reason provided"}`,
+        bodyText:   `You are banned from using this bot.\n\n📌 Reason: ${bannedEntry.reason || "No reason provided"}`,
         bodyStyle:  "sansSerif", footerText: `Your UID: ${senderID}`,
       }),
       threadID, messageID
@@ -225,7 +174,8 @@ async function handleMessage(api, event) {
       AuroraStyler.styleOutput({
         headerText: "Unknown Command", headerSymbol: "🔍", headerStyle: "bold",
         bodyText:   `That command doesn't exist.\nTry **${prefix}help** to see all commands.`,
-        bodyStyle:  "sansSerif", footerText: `${global.config.botName}`,
+        bodyStyle:  "sansSerif", 
+        footerText: `${global.config.botName}`,
       }),
       threadID, messageID
     );
@@ -302,8 +252,6 @@ async function onEvent(api, event) {
       if (banned) return;
     }
 
-    await handleEvent(api, event);
-
     const type = event.type;
 
     if (type === "message_reply" && event.messageReply) {
@@ -319,43 +267,16 @@ async function onEvent(api, event) {
     if (type === "message_reaction") {
       await handleReaction(api, event);
     }
-
-    if (type === "event" && event.logMessageType === "log:subscribe") {
-      const added    = event.logMessageData?.addedParticipants || [];
-      const botAdded = added.some(u => u.userFbId === api.getCurrentUserID());
-      if (botAdded) {
-        const tid = event.threadID;
-        if (global.db) {
-          try {
-            const info = await api.getThreadInfo(tid);
-            global.db.db("threads").updateOne(
-              { threadID: tid },
-              { $set: { threadID: tid, name: info.name || `Unnamed (${tid})` } },
-              { upsert: true }
-            ).catch(() => {});
-          } catch (_) {}
-        }
-        api.sendMessage(
-          AuroraStyler.styleOutput({
-            headerText: `Hello! I'm ${global.config.botName} 👋`, headerSymbol: "🌟", headerStyle: "bold",
-            bodyText:   `Thanks for inviting me!\nType **${global.getPrefix(tid)}help** to see what I can do.`,
-            bodyStyle:  "sansSerif", footerText: `${global.config.botName}`,
-          }),
-          tid
-        );
-        try { await api.changeNickname(global.config.botName, tid, api.getCurrentUserID()); } catch (_) {}
-      }
-    }
   } catch (err) {
-    global.log.error("[ENKIDU:EVENT] " + err.message);
+    global.log.error("[ENKIDU] " + err.message);
   }
 }
 
 function init(api) {
-  loadBannedUsers();
   loadCommands();
   global.botApi = api;
   global.log.success("[ENKIDU] Initialized and ready.");
 }
 
 module.exports = { init, onEvent };
+
