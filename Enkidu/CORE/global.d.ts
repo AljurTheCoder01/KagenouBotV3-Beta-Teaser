@@ -116,7 +116,7 @@ declare global {
   var nsfwEnabled: Map<string, boolean>;
   var disabledCommands: Map<string, string[]>;
   var reactionData: Map<string, EnkiduReactionEntry>;
-  var threadConfigs: Map<string, { prefix?: string }>;
+  var threadConfigs: Map<string, { prefix?: string; [key: string]: any }>;
   var replyListeners: Map<string, EnkiduReplyEntry>;
 
   var log: {
