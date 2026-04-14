@@ -46,7 +46,7 @@ global.getPrefix = (threadID: string): string => {
 };
 
 global.setPrefix = (threadID: string, prefix: string): void => {
-  const cfg: { prefix?: string; [key: string]: any } = global.threadConfigs.get(threadID) || {};
+  const cfg = (global.threadConfigs.get(threadID) || {}) as { prefix?: string; [key: string]: any };
   cfg.prefix = prefix;
   global.threadConfigs.set(threadID, cfg);
 };
