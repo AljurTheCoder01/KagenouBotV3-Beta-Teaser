@@ -15,7 +15,6 @@ const path = require("path");
 const login = require("@dongdev/fca-unofficial");
 const { handleAuroraCommand, loadAuroraCommands } = require("./core/aurora");
 const chalk = require("chalk");
-const enkidu = require("./Enkidu/index");
 /*const chokidar = require("chokidar");*/
 
 /* @GlobalVar */
@@ -740,7 +739,6 @@ const startListeningForMessages = (api) => {
           }
         }
       }
-    enkidu.onEvent(api, event);
     } catch (error) {
       console.error("Error in message listener:", error);
     }
@@ -784,7 +782,6 @@ const startBot = async () => {
       autoMarkRead: false,
     });
     global.botApi = api;
-    enkidu.init(api);  
     startListeningWithAutoRestart(api);
   });
 };
