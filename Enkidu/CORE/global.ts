@@ -1,10 +1,13 @@
 import chalk from "chalk";
 import path from "path";
 import fs from "fs-extra";
+/*
+* hardcoded reply timeout dawg...
+*/
+export const REPLY_TIMEOUT = 600;
 
 global.commands          = new Map();
 global.nonPrefixCommands = new Map();
-global.eventCommands     = [];
 global.usersData         = new Map();
 global.globalData        = new Map();
 global.userCooldowns     = new Map();
@@ -16,7 +19,6 @@ global.threadConfigs     = new Map();
 global.replyListeners    = new Map();
 global.db                = null;
 global.botApi            = null;
-global.appState          = {};
 global.maintenanceMode   = false;
 global.profanityFilter   = null;
 global.profanityEnabled  = false;
@@ -29,7 +31,7 @@ global.config = {
   Prefix:       ["/"],
   botName:      "EnkiduBot",
   mongoUri:     null,
-  replyTimeout: 600,
+  EnkiduPrefix: "/",
 };
 
 global.log = {
@@ -42,7 +44,7 @@ global.log = {
 
 global.getPrefix = (threadID: string): string => {
   const cfg = global.threadConfigs.get(threadID);
-  return (cfg && cfg.prefix) || global.config.Prefix[0];
+  return (cfg && cfg.prefix) || global.config.EnkiduPrefix || "/";
 };
 
 global.setPrefix = (threadID: string, prefix: string): void => {
@@ -102,18 +104,6 @@ global.getLevel = async (userID: string): Promise<number> => {
   }
   return 0;
 };
-
-const globalDataFile = path.join(__dirname, "..", "..", "database", "globalData.json");
-if (fs.existsSync(globalDataFile)) {
-  try {
-    const raw = JSON.parse(fs.readFileSync(globalDataFile, "utf8"));
-    if (Array.isArray(raw)) {
-      for (const [k, v] of raw) global.globalData.set(k, v);
-    }
-  } catch {
-    global.log.warn("[CORE] Could not restore globalData.");
-  }
-}
 
 global.log.success("[CORE] global.ts ready.");
 
