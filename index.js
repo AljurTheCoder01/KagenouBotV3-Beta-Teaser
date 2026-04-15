@@ -643,6 +643,7 @@ const startListeningForMessages = (api) => {
           const replyMessageID = event.messageReply.messageID;
           if (global.Kagenou.replies[replyMessageID]) {
             await handleReply(api, event);
+          if (await enkiduHandleReply(api, event)) 
             return;
           }
           if (global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyMessageID)) {
