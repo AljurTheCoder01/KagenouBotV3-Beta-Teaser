@@ -643,7 +643,6 @@ const startListeningForMessages = (api) => {
           const replyMessageID = event.messageReply.messageID;
           if (global.Kagenou.replies[replyMessageID]) {
             await handleReply(api, event);
-          if (await enkiduHandleReply(api, event)) 
             return;
           }
           if (global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyMessageID)) {
@@ -659,6 +658,7 @@ const startListeningForMessages = (api) => {
             } else {
               console.error("Callback is not a function for messageID:", replyMessageID);
             }
+            if (await enkiduHandleReply(api, event)) 
             return;
           }
         }
