@@ -15,8 +15,8 @@ function createReply(api, opts) {
     onExpire  = null,
   } = opts;
 
-  if (!threadID)  throw new Error("[EnkiduReply] threadID is required.");
-  if (!callback || typeof callback !== "function") throw new Error("[EnkiduReply] callback must be a function.");
+  if (!threadID)  throw new Error("threadID is required.");
+  if (!callback || typeof callback !== "function") throw new Error("Callback must be a function.");
 
   return new Promise((resolve, reject) => {
     api.sendMessage(
@@ -26,7 +26,7 @@ function createReply(api, opts) {
         if (err) return reject(err);
 
         const msgID = info?.messageID;
-        if (!msgID) return reject(new Error("no nessageID"));
+        if (!msgID) return reject(new Error("No messageID "));
 
         const entry = {
           callback,
@@ -36,10 +36,11 @@ function createReply(api, opts) {
           expiresAt: Date.now() + REPLY_TIMEOUT_MS,
         };
 
+        if (!global.replyListeners) global.replyListeners = new Map();
         global.replyListeners.set(msgID, entry);
 
         const timer = setTimeout(() => {
-          global.replyListeners.delete(msgID);
+          if (global.replyListeners) global.replyListeners.delete(msgID);
           if (typeof onExpire === "function") {
             try { onExpire({ api, threadID, originalMessageID: msgID }); } catch (_) {}
           }
@@ -58,6 +59,7 @@ async function handleIncoming(api, event) {
   const repliedToID = event.messageReply?.messageID;
   if (!repliedToID) return false;
 
+  if (!global.replyListeners) return false;
   const listener = global.replyListeners.get(repliedToID);
   if (!listener) return false;
 
@@ -99,7 +101,7 @@ async function handleIncoming(api, event) {
   } catch (err) {
     global.log.error("[EnkiduReply] callback error: " + err.message);
     try {
-      api.sendMessage(`❌ Reply handler error: ${err.message}`, event.threadID, event.messageID);
+      api.sendMessage(`Reply handler error: ${err.message}`, event.threadID, event.messageID);
     } catch (_) {}
   }
 
@@ -125,4 +127,3 @@ function has(messageID) {
 }
 
 module.exports = { createReply, handleIncoming, remove, has, REPLY_TIMEOUT_MS };
-  
