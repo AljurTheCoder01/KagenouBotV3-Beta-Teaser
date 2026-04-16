@@ -521,6 +521,38 @@ const handleMessage = async (api, event) => {
   }
 };
 
+async function handleEnkiduReply(api, event) {
+  if (!event.messageReply) return;
+  const repliedToID = event.messageReply.messageID;
+  if (!repliedToID) return;
+  if (!global.replyListeners) return;
+
+  const replyData = global.replyListeners.get(repliedToID);
+  if (!replyData) return;
+
+  if (replyData.expiresAt && Date.now() > replyData.expiresAt) {
+    global.replyListeners.delete(repliedToID);
+    return;
+  }
+
+  try {
+    await replyData.callback({
+      ...event,
+      event,
+      api,
+      attachments: event.attachments || [],
+      data: replyData.data || {},
+      originalMessageID: repliedToID,
+    });
+  } catch (err) {
+    console.error(`Error:${repliedToID}: ${err.message}`);
+    try {
+      api.sendMessage(`An error: ${err.message}`, event.threadID, event.messageID);
+    } catch (_) {}
+  }
+}
+
+
 /**
  * @typedef {Object} UserStats
  * @property {number} messages
@@ -643,6 +675,10 @@ const startListeningForMessages = (api) => {
           if (global.Kagenou.replies[replyMessageID]) {
             await handleReply(api, event);
             return;
+          }
+          if (global.replyListeners?.has(replyMessageID)) {
+          await handleEnkiduReply(api, event);
+           return;
           }
           if (global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyMessageID)) {
             const listener = global.Kagenou.replyListeners.get(replyMessageID);
