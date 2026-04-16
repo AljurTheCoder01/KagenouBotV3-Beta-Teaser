@@ -8,13 +8,13 @@ module.exports = {
   role: 0,
   async run({ api, event, args }) {
     const { threadID, messageID, senderID } = event;
-    const reportThreadID = "24668331826126458";
+    const reportThreadID = "1209773028031961";
     const styledMessage = (header, body, symbol) => AuroraBetaStyler.styleOutput({
       headerText: header,
       headerSymbol: symbol,
       headerStyle: "bold",
       bodyText: body,
-      bodyStyle: "bold",
+      bodyStyle: "sansSerif",
       footerText: "Developed by: **Aljur Pogoy**"
     });
     if (!args[0] || !["admins", "moderators", "developers"].includes(args[0].toLowerCase())) {
@@ -85,7 +85,7 @@ module.exports = {
             });
             if (!followUpMessageID) throw new Error("Failed to capture follow-up message ID");
             global.Kagenou.replies[followUpMessageID] = { callback: handleReply };
-            sentMessageID = followUpMessageID; // Update sentMessageID for next admin reply
+            sentMessageID = followUpMessageID;
           },
           author: senderID
         };
