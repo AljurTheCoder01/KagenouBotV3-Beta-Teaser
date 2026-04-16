@@ -15,7 +15,6 @@ const path = require("path");
 const login = require("@dongdev/fca-unofficial");
 const { handleAuroraCommand, loadAuroraCommands } = require("./core/aurora");
 const chalk = require("chalk");
-const { handleReply: enkiduHandleReply } = require("./commands/supportFunc/EnkiduReplyFunc");
 /*const chokidar = require("chokidar");*/
 
 /* @GlobalVar */
@@ -646,7 +645,6 @@ const startListeningForMessages = (api) => {
             return;
           }
           if (global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyMessageID)) {
-            if (await enkiduHandleReply(api, event)) return;
             const listener = global.Kagenou.replyListeners.get(replyMessageID);
             if (typeof listener.callback === "function") {
               await listener.callback({
