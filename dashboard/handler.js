@@ -1,16 +1,9 @@
-/*
-* @Notice Don't touch anything for this code or else the dashboard will not run.
-* @Descrip: All handler for dashboard.
-*
-*/
-
-
 
 const path   = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
 
-const sessions = new Map();
+const sessions   = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
 
 function createSession() {
@@ -263,16 +256,33 @@ module.exports = function mountDashboard(app) {
     return "application/octet-stream";
   }
 
+  function getMimeFromFilename(filename) {
+    if (!filename) return null;
+    const ext = String(filename).split('.').pop().toLowerCase();
+    const map = {
+      mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
+      mp3: 'audio/mp3', ogg: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/m4a', aac: 'audio/aac', flac: 'audio/flac',
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+    };
+    return map[ext] || null;
+  }
+
   async function serializeAttachment(a) {
     if (!a) return null;
     try {
+      const hintMime = (a && typeof a === "object")
+        ? (getMimeFromFilename(a.filename) || getMimeFromFilename(a.name) || a.type || null)
+        : null;
+
       if (typeof a.pipe === "function") {
         const r = await streamToDataURL(a);
-        return { kind: "media", mime: r.mime, dataUrl: r.dataUrl, size: r.size };
+        const finalMime = hintMime || r.mime;
+        return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + r.dataUrl.split(",")[1], size: r.size };
       }
       if (Buffer.isBuffer(a)) {
-        const mime = detectMime(a);
-        return { kind: "media", mime, dataUrl: "data:" + mime + ";base64," + a.toString("base64"), size: a.length };
+        const detectedMime = detectMime(a);
+        const finalMime = hintMime || detectedMime;
+        return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + a.toString("base64"), size: a.length };
       }
       if (typeof a === "string" && (a.startsWith("http://") || a.startsWith("https://"))) {
         return { kind: "url", url: a };
@@ -395,8 +405,22 @@ module.exports = function mountDashboard(app) {
     return 0;
   }
 
+  function buildFakeReplyEvent(uid, replyToMessageID, newInput) {
+    return {
+      type:         "message_reply",
+      threadID:     "guest_" + uid,
+      senderID:     String(uid),
+      messageID:    "vmsg_reply_" + Date.now(),
+      body:         newInput,
+      attachments:  [],
+      timestamp:    Date.now(),
+      isGroup:      false,
+      messageReply: { messageID: replyToMessageID },
+    };
+  }
+
   async function handleGuestReply(uid, replyToMessageID, newInput, responseBuffer, vApi) {
-    
+
     if (global._guestReplyListeners && global._guestReplyListeners.has(replyToMessageID)) {
       const listenerData = global._guestReplyListeners.get(replyToMessageID);
 
@@ -406,18 +430,7 @@ module.exports = function mountDashboard(app) {
         return true;
       }
 
-      const fakeReplyEvent = {
-        type:         "message_reply",
-        threadID:     "guest_" + uid,
-        senderID:     String(uid),
-        messageID:    "vmsg_reply_" + Date.now(),
-        body:         newInput,
-        attachments:  [],
-        timestamp:    Date.now(),
-        isGroup:      false,
-        messageReply: { messageID: replyToMessageID },
-      };
-
+      const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
       try {
         await listenerData.callback({
           ...fakeReplyEvent,
@@ -427,10 +440,51 @@ module.exports = function mountDashboard(app) {
           data: listenerData,
           originalMessageID: replyToMessageID,
         });
-        
         if (listenerData.oneShot !== false) {
           global._guestReplyListeners.delete(replyToMessageID);
         }
+      } catch (err) {
+        responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
+      }
+      return true;
+    }
+
+    if (global.replyListeners && global.replyListeners.has(replyToMessageID)) {
+      const replyData = global.replyListeners.get(replyToMessageID);
+      if (replyData.expiresAt && Date.now() > replyData.expiresAt) {
+        global.replyListeners.delete(replyToMessageID);
+        responseBuffer.push({ type: "message", body: "⏰ This reply has expired.", attachments: [], timestamp: Date.now() });
+        return true;
+      }
+      const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
+      try {
+        await replyData.callback({
+          ...fakeReplyEvent,
+          event: fakeReplyEvent,
+          api: vApi,
+          attachments: [],
+          data: replyData.data || {},
+          originalMessageID: replyToMessageID,
+        });
+      } catch (err) {
+        responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
+      }
+      return true;
+    }
+
+    if (global.Kagenou && global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyToMessageID)) {
+      const listenerData = global.Kagenou.replyListeners.get(replyToMessageID);
+      const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
+      try {
+        await listenerData.callback({
+          ...fakeReplyEvent,
+          event: fakeReplyEvent,
+          api: vApi,
+          attachments: [],
+          data: listenerData,
+          originalMessageID: replyToMessageID,
+        });
+        global.Kagenou.replyListeners.delete(replyToMessageID);
       } catch (err) {
         responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
       }
@@ -443,17 +497,7 @@ module.exports = function mountDashboard(app) {
         responseBuffer.push({ type: "message", body: "Only the original sender can reply to this message.", attachments: [], timestamp: Date.now() });
         return true;
       }
-      const fakeReplyEvent = {
-        type:         "message_reply",
-        threadID:     "guest_" + uid,
-        senderID:     String(uid),
-        messageID:    "vmsg_reply_" + Date.now(),
-        body:         newInput,
-        attachments:  [],
-        timestamp:    Date.now(),
-        isGroup:      false,
-        messageReply: { messageID: replyToMessageID },
-      };
+      const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
       try {
         await replyData.callback({
           ...fakeReplyEvent,
@@ -468,7 +512,7 @@ module.exports = function mountDashboard(app) {
       return true;
     }
 
-    return false; 
+    return false;
   }
 
   async function handleGuestReaction(uid, messageID, reaction) {
@@ -504,6 +548,9 @@ module.exports = function mountDashboard(app) {
     global.reactionData.set(messageID, reactionInfo);
 
     if (reactionInfo.callback && typeof reactionInfo.callback === "function") {
+      const responseBuffer = [];
+      const vApi = createVirtualApi(uid, responseBuffer);
+
       try {
         const fakeReactionEvent = {
           type:      "message_reaction",
@@ -513,19 +560,16 @@ module.exports = function mountDashboard(app) {
           reaction,
           timestamp: Date.now(),
         };
-        
-        const miniApi = {
-          sendMessage: async () => {},
-          setMessageReaction: (r, mID, cb) => { if (cb) cb(null); },
-        };
-        await reactionInfo.callback({ api: miniApi, event: fakeReactionEvent, reaction, threadID: "guest_"+uid, messageID, senderID });
+        await reactionInfo.callback({ api: vApi, event: fakeReactionEvent, reaction, threadID: "guest_" + uid, messageID, senderID });
         global.reactionData.delete(messageID);
+        return { ok: true, responses: responseBuffer };
       } catch (err) {
         global.log.error(`[GUEST_REACTION] Callback error: ${err.message}`);
+        return { ok: false, error: err.message, responses: [] };
       }
     }
 
-    return { ok: true };
+    return { ok: true, responses: [] };
   }
 
   async function runGuestCommand(uid, input, replyToMessageID) {
@@ -547,6 +591,7 @@ module.exports = function mountDashboard(app) {
         }
         return responseBuffer;
       }
+      return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
 
     const command = (global.commands && global.commands.get(cmdName))
@@ -671,7 +716,7 @@ module.exports = function mountDashboard(app) {
       const result = await handleGuestReaction(session.uid, messageID, reaction);
       return res.json(result);
     } catch (err) {
-      return res.status(500).json({ ok: false, error: err.message });
+      return res.status(500).json({ ok: false, error: err.message, responses: [] });
     }
   });
 
