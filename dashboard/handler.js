@@ -1,13 +1,16 @@
-/**
-* @Description - handler dawg
-* @author - Aljurx pogoy 
+/*
+* @Notice Don't touch anything for this code or else the dashboard will not run.
+* @Descrip: All handler for dashboard.
+*
 */
+
+
 
 const path   = require("path");
 const crypto = require("crypto");
-const fs     = require("fs-extra");
+const fs = require("fs-extra");
 
-const sessions   = new Map();
+const sessions = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
 
 function createSession() {
@@ -57,6 +60,9 @@ module.exports = function mountDashboard(app) {
   app.use(express.json());
 
   app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+  });
+  app.get("/admin", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
   });
 
@@ -115,9 +121,8 @@ module.exports = function mountDashboard(app) {
   app.post("/data/message", async (req, res) => {
     if (!checkAuth(req, res)) return;
     const { threadIDs, message } = req.body || {};
-    if (!Array.isArray(threadIDs) || !threadIDs.length || !message?.trim()) {
+    if (!Array.isArray(threadIDs) || !threadIDs.length || !message?.trim())
       return res.status(400).json({ ok: false, error: "threadIDs (array) and message are required." });
-    }
     const api = global.botApi;
     if (!api) return res.status(503).json({ ok: false, error: "Bot not connected yet." });
     const formatted = `❲ 👑 ❳ Message from Admin\n━━━━━━━━━━━━━━━━━━\n${message.trim()}\n\nFrom: ${global.config?.botName || "Shadow Garden Bot"} Dashboard`;
@@ -133,11 +138,8 @@ module.exports = function mountDashboard(app) {
     const api = global.botApi;
     if (!api) return res.status(503).json({ ok: false, error: "Bot not connected yet." });
     let threadList;
-    try {
-      threadList = await api.getThreadList(30, null, ["INBOX"]);
-    } catch (err) {
-      return res.status(500).json({ ok: false, error: "Failed to fetch thread list: " + err.message });
-    }
+    try { threadList = await api.getThreadList(30, null, ["INBOX"]); }
+    catch (err) { return res.status(500).json({ ok: false, error: "Failed to fetch thread list: " + err.message }); }
     const targets = threadList
       .filter(t => t.isGroup && t.name && t.name !== t.threadID)
       .map(t => t.threadID);
@@ -158,7 +160,8 @@ module.exports = function mountDashboard(app) {
 
   app.post("/data/reload", (req, res) => {
     if (!checkAuth(req, res)) return;
-    if (typeof global.reloadCommands !== "function") return res.status(503).json({ ok: false, error: "reloadCommands not available." });
+    if (typeof global.reloadCommands !== "function")
+      return res.status(503).json({ ok: false, error: "reloadCommands not available." });
     try {
       global.reloadCommands();
       global.log.success("[DASHBOARD] Commands reloaded.");
@@ -202,7 +205,7 @@ module.exports = function mountDashboard(app) {
     } catch (err) { return res.status(500).json({ ok: false, error: err.message }); }
   });
 
-  global.log.success("[DASHBOARD] Mounted at /");
+  global.log.success("[DASHBOARD] Admin dashboard mounted at / and /admin");
 
   const guestSessions = new Map();
   const GUEST_TTL     = 1000 * 60 * 60 * 3;
@@ -240,15 +243,23 @@ module.exports = function mountDashboard(app) {
   }
 
   function detectMime(buf) {
-    if (!buf || buf.length < 8) return "application/octet-stream";
+    if (!buf || buf.length < 12) return "application/octet-stream";
     const h = buf.slice(0, 12);
-    if (h[0] === 0xFF && h[1] === 0xD8 && h[2] === 0xFF) return "image/jpeg";
-    if (h[0] === 0x89 && h[1] === 0x50 && h[2] === 0x4E && h[3] === 0x47) return "image/png";
-    if (h[0] === 0x47 && h[1] === 0x49 && h[2] === 0x46) return "image/gif";
-    if (h[0] === 0x52 && h[1] === 0x49 && h[2] === 0x46 && h[3] === 0x41) return "image/webp";
-    if (h[4] === 0x66 && h[5] === 0x74 && h[6] === 0x79 && h[7] === 0x70) return "video/mp4";
-    if (h[4] === 0x6D && h[5] === 0x6F && (h[6] === 0x6F || h[6] === 0x64)) return "video/mp4";
-    if (h[0] === 0x1A && h[1] === 0x45 && h[2] === 0xDF && h[3] === 0xA3) return "video/webm";
+    
+    if (h[0]===0xFF && h[1]===0xD8 && h[2]===0xFF) return "image/jpeg";
+    if (h[0]===0x89 && h[1]===0x50 && h[2]===0x4E && h[3]===0x47) return "image/png";
+    if (h[0]===0x47 && h[1]===0x49 && h[2]===0x46) return "image/gif";
+    if (h[0]===0x52 && h[1]===0x49 && h[2]===0x46 && h[3]===0x41) return "image/webp";
+    
+    if (h[4]===0x66 && h[5]===0x74 && h[6]===0x79 && h[7]===0x70) return "video/mp4";
+    if (h[4]===0x6D && h[5]===0x6F && (h[6]===0x6F || h[6]===0x64)) return "video/mp4";
+    if (h[0]===0x1A && h[1]===0x45 && h[2]===0xDF && h[3]===0xA3) return "video/webm";
+    
+    if (h[0]===0x49 && h[1]===0x44 && h[2]===0x33) return "audio/mp3";          
+    if (h[0]===0xFF && (h[1]&0xE0)===0xE0) return "audio/mp3";                   
+    if (h[0]===0x4F && h[1]===0x67 && h[2]===0x67 && h[3]===0x53) return "audio/ogg"; 
+    if (h[0]===0x52 && h[1]===0x49 && h[2]===0x46 && h[3]===0x46 && h[8]===0x57 && h[9]===0x41 && h[10]===0x56 && h[11]===0x45) return "audio/wav";
+    if (h[4]===0x66 && h[5]===0x74 && h[6]===0x79 && h[7]===0x70 && h[8]===0x4D && h[9]===0x34) return "audio/m4a"; 
     return "application/octet-stream";
   }
 
@@ -298,20 +309,43 @@ module.exports = function mountDashboard(app) {
             ? (Array.isArray(data.attachment) ? data.attachment : [data.attachment])
             : [];
         }
+
         const attachments = await Promise.all(rawAttachments.map(serializeAttachment));
-        responseBuffer.push({
+        const msgEntry = {
           type:        "message",
           body:        body.trim(),
           attachments: attachments.filter(Boolean),
           timestamp:   Date.now(),
-        });
+        };
+
+        if (typeof callback === "function") {
+          const fakeInfo = {
+            threadID:  VIRTUAL_THREAD,
+            messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+          };
+          msgEntry.messageID = fakeInfo.messageID;
+
+          if (!global._guestReplyListeners) global._guestReplyListeners = new Map();
+          global._guestReplyListeners.set(fakeInfo.messageID, {
+            callback,
+            expiresAt: Date.now() + 30 * 60 * 1000,
+            uid,
+          });
+
+          responseBuffer.push(msgEntry);
+          callback(null, fakeInfo);
+          return fakeInfo;
+        }
+
         const fakeInfo = {
           threadID:  VIRTUAL_THREAD,
           messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
         };
-        if (callback) callback(null, fakeInfo);
+        msgEntry.messageID = fakeInfo.messageID;
+        responseBuffer.push(msgEntry);
         return fakeInfo;
       },
+
       setMessageReaction(reaction, messageID, callback) {
         if (typeof callback === "function") callback(null);
       },
@@ -361,7 +395,140 @@ module.exports = function mountDashboard(app) {
     return 0;
   }
 
-  async function runGuestCommand(uid, input) {
+  async function handleGuestReply(uid, replyToMessageID, newInput, responseBuffer, vApi) {
+    
+    if (global._guestReplyListeners && global._guestReplyListeners.has(replyToMessageID)) {
+      const listenerData = global._guestReplyListeners.get(replyToMessageID);
+
+      if (listenerData.expiresAt && Date.now() > listenerData.expiresAt) {
+        global._guestReplyListeners.delete(replyToMessageID);
+        responseBuffer.push({ type: "message", body: "⏰ This reply has expired.", attachments: [], timestamp: Date.now() });
+        return true;
+      }
+
+      const fakeReplyEvent = {
+        type:         "message_reply",
+        threadID:     "guest_" + uid,
+        senderID:     String(uid),
+        messageID:    "vmsg_reply_" + Date.now(),
+        body:         newInput,
+        attachments:  [],
+        timestamp:    Date.now(),
+        isGroup:      false,
+        messageReply: { messageID: replyToMessageID },
+      };
+
+      try {
+        await listenerData.callback({
+          ...fakeReplyEvent,
+          event: fakeReplyEvent,
+          api: vApi,
+          attachments: [],
+          data: listenerData,
+          originalMessageID: replyToMessageID,
+        });
+        
+        if (listenerData.oneShot !== false) {
+          global._guestReplyListeners.delete(replyToMessageID);
+        }
+      } catch (err) {
+        responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
+      }
+      return true;
+    }
+
+    if (global.Kagenou && global.Kagenou.replies && global.Kagenou.replies[replyToMessageID]) {
+      const replyData = global.Kagenou.replies[replyToMessageID];
+      if (replyData.author && String(uid) !== replyData.author) {
+        responseBuffer.push({ type: "message", body: "Only the original sender can reply to this message.", attachments: [], timestamp: Date.now() });
+        return true;
+      }
+      const fakeReplyEvent = {
+        type:         "message_reply",
+        threadID:     "guest_" + uid,
+        senderID:     String(uid),
+        messageID:    "vmsg_reply_" + Date.now(),
+        body:         newInput,
+        attachments:  [],
+        timestamp:    Date.now(),
+        isGroup:      false,
+        messageReply: { messageID: replyToMessageID },
+      };
+      try {
+        await replyData.callback({
+          ...fakeReplyEvent,
+          event: fakeReplyEvent,
+          api: vApi,
+          attachments: [],
+          data: replyData,
+        });
+      } catch (err) {
+        responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
+      }
+      return true;
+    }
+
+    return false; 
+  }
+
+  async function handleGuestReaction(uid, messageID, reaction) {
+    const senderID = String(uid);
+
+    if (!global.usersData.has(senderID)) {
+      global.usersData.set(senderID, { messages: 0, reactions: 0 });
+    }
+    const userStats = global.usersData.get(senderID);
+    userStats.reactions = (userStats.reactions || 0) + 1;
+    global.usersData.set(senderID, userStats);
+
+    if (global.db) {
+      try {
+        await global.db.db("users").updateOne(
+          { userId: senderID },
+          { $set: { userId: senderID, data: userStats } },
+          { upsert: true }
+        );
+      } catch (err) {
+        global.log.error(`[GUEST_REACTION] DB error for ${senderID}: ${err.message}`);
+      }
+    }
+
+    if (!global.reactionData) global.reactionData = new Map();
+    if (!global.reactionData.has(messageID)) {
+      global.reactionData.set(messageID, { count: 0, users: new Set(), callback: null, authorID: null, threadID: "guest_" + uid });
+    }
+    const reactionInfo = global.reactionData.get(messageID);
+    reactionInfo.count = (reactionInfo.count || 0) + 1;
+    reactionInfo.users = reactionInfo.users || new Set();
+    reactionInfo.users.add(senderID);
+    global.reactionData.set(messageID, reactionInfo);
+
+    if (reactionInfo.callback && typeof reactionInfo.callback === "function") {
+      try {
+        const fakeReactionEvent = {
+          type:      "message_reaction",
+          threadID:  "guest_" + uid,
+          senderID,
+          messageID,
+          reaction,
+          timestamp: Date.now(),
+        };
+        
+        const miniApi = {
+          sendMessage: async () => {},
+          setMessageReaction: (r, mID, cb) => { if (cb) cb(null); },
+        };
+        await reactionInfo.callback({ api: miniApi, event: fakeReactionEvent, reaction, threadID: "guest_"+uid, messageID, senderID });
+        global.reactionData.delete(messageID);
+      } catch (err) {
+        global.log.error(`[GUEST_REACTION] Callback error: ${err.message}`);
+      }
+    }
+
+    return { ok: true };
+  }
+
+  async function runGuestCommand(uid, input, replyToMessageID) {
     const prefix  = (global.config && global.config.Prefix && global.config.Prefix[0]) || "/";
     const trimmed = input.trim();
     const body    = trimmed.startsWith(prefix) ? trimmed : prefix + trimmed;
@@ -369,18 +536,31 @@ module.exports = function mountDashboard(app) {
     const cmdName = parts[0] ? parts[0].toLowerCase() : "";
     const args    = parts.slice(1);
 
+    const responseBuffer = [];
+    const vApi           = createVirtualApi(uid, responseBuffer);
+
+    if (replyToMessageID) {
+      const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
+      if (handled) {
+        if (!responseBuffer.length) {
+          responseBuffer.push({ type: "message", body: "(Reply processed but produced no output.)", attachments: [], timestamp: Date.now() });
+        }
+        return responseBuffer;
+      }
+    }
+
     const command = (global.commands && global.commands.get(cmdName))
                  || (global.nonPrefixCommands && global.nonPrefixCommands.get(cmdName));
 
     if (!command) {
-      return [{ type: "message", body: "Command \"" + cmdName + "\" not found. Use " + prefix + "help to see available commands.", attachments: [], timestamp: Date.now() }];
+      return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
     }
 
     const userRole    = getGuestUserRole(uid);
     const commandRole = (command.config && command.config.role != null) ? command.config.role : (command.role != null ? command.role : 0);
 
     if (userRole < commandRole) {
-      return [{ type: "message", body: "Permission denied. This command requires role " + commandRole + " and your role is " + userRole + ".", attachments: [], timestamp: Date.now() }];
+      return [{ type: "message", body: `Permission denied. This command requires role ${commandRole} and your role is ${userRole}.`, attachments: [], timestamp: Date.now() }];
     }
 
     const fakeEvent = {
@@ -395,9 +575,7 @@ module.exports = function mountDashboard(app) {
       messageReply: null,
     };
 
-    const responseBuffer = [];
-    const vApi           = createVirtualApi(uid, responseBuffer);
-    const vSendMessage   = async (api, msgData) =>
+    const vSendMessage = async (api, msgData) =>
       vApi.sendMessage(
         { body: msgData.message || "", attachment: msgData.attachment },
         msgData.threadID,
@@ -422,14 +600,13 @@ module.exports = function mountDashboard(app) {
   }
 
   app.get("/guest", (req, res) => {
-    res.sendFile(path.join(__dirname, "guest.html"));
+    res.sendFile(path.join(__dirname, "index.html"));
   });
 
   app.post("/guest/login", (req, res) => {
     const { uid } = req.body || {};
-    if (!uid || !/^\d+$/.test(String(uid).trim())) {
+    if (!uid || !/^\d+$/.test(String(uid).trim()))
       return res.status(400).json({ ok: false, error: "Please enter a valid numeric Facebook UID." });
-    }
     const token = createGuestSession(String(uid).trim());
     global.log.info("[GUEST] Session created for UID " + uid + ".");
     return res.json({ ok: true, token, uid: String(uid).trim() });
@@ -471,13 +648,29 @@ module.exports = function mountDashboard(app) {
     const tok     = req.headers["x-guest-token"];
     const session = getGuestSession(tok);
     if (!session) return res.status(401).json({ ok: false, error: "Session expired. Please log in again." });
-    const { input } = req.body || {};
+    const { input, replyTo } = req.body || {};
     if (!input || !input.trim()) return res.status(400).json({ ok: false, error: "input is required." });
     try {
-      const responses = await runGuestCommand(session.uid, input);
+      const responses = await runGuestCommand(session.uid, input, replyTo || null);
       return res.json({ ok: true, responses });
     } catch (err) {
       global.log.error("[GUEST] Error: " + err.message);
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  app.post("/guest/react", async (req, res) => {
+    const tok     = req.headers["x-guest-token"];
+    const session = getGuestSession(tok);
+    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
+    const { messageID, reaction } = req.body || {};
+    if (!messageID || !reaction) return res.status(400).json({ ok: false, error: "messageID and reaction are required." });
+    const VALID_REACTIONS = ['😢','👍','🤩','🗿','💝'];
+    if (!VALID_REACTIONS.includes(reaction)) return res.status(400).json({ ok: false, error: "Invalid reaction." });
+    try {
+      const result = await handleGuestReaction(session.uid, messageID, reaction);
+      return res.json(result);
+    } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }
   });
