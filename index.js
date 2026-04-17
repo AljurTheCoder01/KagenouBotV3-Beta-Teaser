@@ -521,6 +521,23 @@ const handleMessage = async (api, event) => {
   }
 };
 
+const ENKIDU_REPLY_TTL = 30 * 60 * 1000;
+
+function registerEnkiduListener(msgID, callback, data = {}) {
+  if (!global.replyListeners) global.replyListeners = new Map();
+  global.replyListeners.set(msgID, {
+    callback,
+    data,
+    expiresAt: Date.now() + ENKIDU_REPLY_TTL,
+  });
+  const timer = setTimeout(() => {
+    if (global.replyListeners) global.replyListeners.delete(msgID);
+  }, ENKIDU_REPLY_TTL);
+  if (timer.unref) timer.unref();
+}
+
+global.registerEnkiduListener = registerEnkiduListener;
+
 async function handleEnkiduReply(api, event) {
   if (!event.messageReply) return;
   const repliedToID = event.messageReply.messageID;
@@ -544,10 +561,11 @@ async function handleEnkiduReply(api, event) {
       data: replyData.data || {},
       originalMessageID: repliedToID,
     });
+    console.log(`[EnkiduReply] Processed reply for messageID: ${repliedToID}`);
   } catch (err) {
-    console.error(`Error:${repliedToID}: ${err.message}`);
+    console.error(`[EnkiduReply ERROR] messageID ${repliedToID}: ${err.message}`);
     try {
-      api.sendMessage(`An error: ${err.message}`, event.threadID, event.messageID);
+      api.sendMessage(`An error occurred while processing your reply: ${err.message}`, event.threadID, event.messageID);
     } catch (_) {}
   }
 }
