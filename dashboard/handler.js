@@ -1,7 +1,9 @@
-
+/*
+* @Notice do not change anything, or else dashboard will not run properly.
+*/
 const path   = require("path");
 const crypto = require("crypto");
-const fs     = require("fs-extra");
+const fs = require("fs-extra");
 
 const sessions   = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
@@ -686,17 +688,83 @@ module.exports = function mountDashboard(app) {
     return responseBuffer;
   }
 
+  const guestAccounts = new Map();
+
+  async function loadGuestAccounts() {
+    if (!global.db) { global.log.warn("[GUEST] No DB connected — guest accounts unavailable."); return; }
+    try {
+      const all = await global.db.db("guestAccounts").find({}).toArray();
+      all.forEach(a => guestAccounts.set(String(a.uid), { passwordHash: a.passwordHash }));
+      global.log.info("[GUEST] Loaded " + all.length + " guest accounts from MongoDB.");
+    } catch (e) { global.log.error("[GUEST] Failed to load guest accounts: " + e.message); }
+  }
+  loadGuestAccounts();
+
+  async function saveGuestAccount(uid, passwordHash) {
+    guestAccounts.set(uid, { passwordHash });
+    if (!global.db) throw new Error("No database connected.");
+    await global.db.db("guestAccounts").updateOne(
+      { uid },
+      { $set: { uid, passwordHash } },
+      { upsert: true }
+    );
+  }
+
+  async function getGuestAccount(uid) {
+    if (guestAccounts.has(uid)) return guestAccounts.get(uid);
+    if (!global.db) return null;
+    try {
+      const doc = await global.db.db("guestAccounts").findOne({ uid });
+      if (doc) { guestAccounts.set(uid, { passwordHash: doc.passwordHash }); return { passwordHash: doc.passwordHash }; }
+    } catch (e) { global.log.error("[GUEST] DB lookup error: " + e.message); }
+    return null;
+  }
+
+  function hashPassword(password) {
+    return crypto.createHash("sha256").update(password + "sgbot_salt_2025").digest("hex");
+  }
+
   app.get("/guest", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
   });
 
-  app.post("/guest/login", (req, res) => {
-    const { uid } = req.body || {};
+  app.post("/guest/register", async (req, res) => {
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    const { uid, password } = req.body || {};
     if (!uid || !/^\d+$/.test(String(uid).trim()))
       return res.status(400).json({ ok: false, error: "Please enter a valid numeric Facebook UID." });
-    const token = createGuestSession(String(uid).trim());
-    global.log.info("[GUEST] Session created for UID " + uid + ".");
-    return res.json({ ok: true, token, uid: String(uid).trim() });
+    if (!password || password.length < 6)
+      return res.status(400).json({ ok: false, error: "Password must be at least 6 characters." });
+    const cleanUid = String(uid).trim();
+    const existing = await getGuestAccount(cleanUid);
+    if (existing)
+      return res.status(409).json({ ok: false, error: "This UID is already registered. Please log in.", exists: true });
+    try {
+      const passwordHash = hashPassword(password);
+      await saveGuestAccount(cleanUid, passwordHash);
+      global.log.info("[GUEST] New account registered for UID " + cleanUid + ".");
+      return res.json({ ok: true });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: "Failed to save account: " + e.message });
+    }
+  });
+
+  app.post("/guest/login", async (req, res) => {
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    const { uid, password } = req.body || {};
+    if (!uid || !/^\d+$/.test(String(uid).trim()))
+      return res.status(400).json({ ok: false, error: "Please enter a valid numeric Facebook UID." });
+    if (!password)
+      return res.status(400).json({ ok: false, error: "Password is required." });
+    const cleanUid = String(uid).trim();
+    const account = await getGuestAccount(cleanUid);
+    if (!account)
+      return res.status(404).json({ ok: false, error: "UID not registered. Please create an account first.", notFound: true });
+    if (account.passwordHash !== hashPassword(password))
+      return res.status(401).json({ ok: false, error: "Incorrect password." });
+    const token = createGuestSession(cleanUid);
+    global.log.info("[GUEST] Session created for UID " + cleanUid + ".");
+    return res.json({ ok: true, token, uid: cleanUid });
   });
 
   app.post("/guest/logout", (req, res) => {
