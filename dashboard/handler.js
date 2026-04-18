@@ -1,7 +1,7 @@
 
 const path   = require("path");
 const crypto = require("crypto");
-const fs = require("fs-extra");
+const fs     = require("fs-extra");
 
 const sessions   = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
@@ -270,28 +270,47 @@ module.exports = function mountDashboard(app) {
   async function serializeAttachment(a) {
     if (!a) return null;
     try {
+      if (a && typeof a === "object" && typeof a.then === "function") {
+        a = await a;
+      }
+      if (!a) return null;
+
       const hintMime = (a && typeof a === "object")
-        ? (getMimeFromFilename(a.filename) || getMimeFromFilename(a.name) || a.type || null)
+        ? (getMimeFromFilename(a.filename) || getMimeFromFilename(a.name) || a.mimetype || a.type || null)
         : null;
+
+      if (a && typeof a === "object" && typeof a.stream?.pipe === "function") {
+        const r = await streamToDataURL(a.stream);
+        const finalMime = hintMime || r.mime;
+        return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + r.dataUrl.split(",")[1], size: r.size };
+      }
 
       if (typeof a.pipe === "function") {
         const r = await streamToDataURL(a);
         const finalMime = hintMime || r.mime;
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + r.dataUrl.split(",")[1], size: r.size };
       }
+
       if (Buffer.isBuffer(a)) {
         const detectedMime = detectMime(a);
         const finalMime = hintMime || detectedMime;
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + a.toString("base64"), size: a.length };
       }
+
       if (typeof a === "string" && (a.startsWith("http://") || a.startsWith("https://"))) {
         return { kind: "url", url: a };
       }
+
       if (typeof a === "object") {
         if (a.url)  return { kind: "url",  url: a.url };
-        if (a.path) return { kind: "file", path: a.path };
+        if (a.path) {
+          const buf = fs.readFileSync(a.path);
+          const detectedMime = hintMime || getMimeFromFilename(a.path) || detectMime(buf);
+          return { kind: "media", mime: detectedMime, dataUrl: "data:" + detectedMime + ";base64," + buf.toString("base64"), size: buf.length };
+        }
         return { kind: "object", data: JSON.stringify(a).slice(0, 200) };
       }
+
       return { kind: "unknown", raw: String(a).slice(0, 100) };
     } catch (err) {
       return { kind: "error", error: err.message };
@@ -300,6 +319,14 @@ module.exports = function mountDashboard(app) {
 
   function createVirtualApi(uid, responseBuffer) {
     const VIRTUAL_THREAD = "guest_" + uid;
+
+    function resolveAttachments(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (raw.stream && typeof raw.stream.pipe === "function") return [raw.stream];
+      return [raw];
+    }
+
     return {
       async sendMessage(data, threadID, arg3, arg4) {
         let callback     = null;
@@ -310,48 +337,46 @@ module.exports = function mountDashboard(app) {
         } else if (typeof arg3 === "string") {
           replyToMsgID = arg3;
         }
+
         let body = "", rawAttachments = [];
         if (typeof data === "string") {
           body = data;
         } else if (data && typeof data === "object") {
-          body           = data.body || "";
-          rawAttachments = data.attachment
-            ? (Array.isArray(data.attachment) ? data.attachment : [data.attachment])
-            : [];
+          body           = data.body || data.message || "";
+          rawAttachments = resolveAttachments(data.attachment);
         }
 
         const attachments = await Promise.all(rawAttachments.map(serializeAttachment));
+        const fakeInfo = {
+          threadID:  VIRTUAL_THREAD,
+          messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        };
         const msgEntry = {
           type:        "message",
           body:        body.trim(),
           attachments: attachments.filter(Boolean),
           timestamp:   Date.now(),
+          messageID:   fakeInfo.messageID,
         };
 
         if (typeof callback === "function") {
-          const fakeInfo = {
-            threadID:  VIRTUAL_THREAD,
-            messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-          };
-          msgEntry.messageID = fakeInfo.messageID;
-
           if (!global._guestReplyListeners) global._guestReplyListeners = new Map();
-          global._guestReplyListeners.set(fakeInfo.messageID, {
-            callback,
-            expiresAt: Date.now() + 30 * 60 * 1000,
-            uid,
-          });
 
-          responseBuffer.push(msgEntry);
           callback(null, fakeInfo);
-          return fakeInfo;
+
+          if (global.Kagenou?.replies?.[fakeInfo.messageID]) {
+            const registeredReply = global.Kagenou.replies[fakeInfo.messageID];
+            global._guestReplyListeners.set(fakeInfo.messageID, {
+              callback: registeredReply.callback,
+              author:   registeredReply.author,
+              expiresAt: Date.now() + 30 * 60 * 1000,
+              uid,
+              oneShot: true,
+            });
+            delete global.Kagenou.replies[fakeInfo.messageID];
+          }
         }
 
-        const fakeInfo = {
-          threadID:  VIRTUAL_THREAD,
-          messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-        };
-        msgEntry.messageID = fakeInfo.messageID;
         responseBuffer.push(msgEntry);
         return fakeInfo;
       },
@@ -430,14 +455,19 @@ module.exports = function mountDashboard(app) {
         return true;
       }
 
+      if (listenerData.author && String(uid) !== String(listenerData.author)) {
+        responseBuffer.push({ type: "message", body: "Only the original sender can reply to this message.", attachments: [], timestamp: Date.now() });
+        return true;
+      }
+
       const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
       try {
         await listenerData.callback({
           ...fakeReplyEvent,
-          event: fakeReplyEvent,
-          api: vApi,
-          attachments: [],
-          data: listenerData,
+          event:             fakeReplyEvent,
+          api:               vApi,
+          attachments:       [],
+          data:              listenerData,
           originalMessageID: replyToMessageID,
         });
         if (listenerData.oneShot !== false) {
@@ -460,10 +490,10 @@ module.exports = function mountDashboard(app) {
       try {
         await replyData.callback({
           ...fakeReplyEvent,
-          event: fakeReplyEvent,
-          api: vApi,
-          attachments: [],
-          data: replyData.data || {},
+          event:             fakeReplyEvent,
+          api:               vApi,
+          attachments:       [],
+          data:              replyData.data || {},
           originalMessageID: replyToMessageID,
         });
       } catch (err) {
@@ -472,17 +502,16 @@ module.exports = function mountDashboard(app) {
       return true;
     }
 
-    if (global.Kagenou && global.Kagenou.replyListeners && global.Kagenou.replyListeners.has(replyToMessageID)) {
+    if (global.Kagenou?.replyListeners?.has(replyToMessageID)) {
       const listenerData = global.Kagenou.replyListeners.get(replyToMessageID);
       const fakeReplyEvent = buildFakeReplyEvent(uid, replyToMessageID, newInput);
       try {
         await listenerData.callback({
           ...fakeReplyEvent,
-          event: fakeReplyEvent,
-          api: vApi,
-          attachments: [],
-          data: listenerData,
-          originalMessageID: replyToMessageID,
+          event:             fakeReplyEvent,
+          api:               vApi,
+          attachments:       [],
+          data:              { senderID: String(uid), threadID: "guest_" + uid, messageID: fakeReplyEvent.messageID },
         });
         global.Kagenou.replyListeners.delete(replyToMessageID);
       } catch (err) {
@@ -491,9 +520,9 @@ module.exports = function mountDashboard(app) {
       return true;
     }
 
-    if (global.Kagenou && global.Kagenou.replies && global.Kagenou.replies[replyToMessageID]) {
+    if (global.Kagenou?.replies?.[replyToMessageID]) {
       const replyData = global.Kagenou.replies[replyToMessageID];
-      if (replyData.author && String(uid) !== replyData.author) {
+      if (replyData.author && String(uid) !== String(replyData.author)) {
         responseBuffer.push({ type: "message", body: "Only the original sender can reply to this message.", attachments: [], timestamp: Date.now() });
         return true;
       }
@@ -501,10 +530,10 @@ module.exports = function mountDashboard(app) {
       try {
         await replyData.callback({
           ...fakeReplyEvent,
-          event: fakeReplyEvent,
-          api: vApi,
+          event:       fakeReplyEvent,
+          api:         vApi,
           attachments: [],
-          data: replyData,
+          data:        replyData,
         });
       } catch (err) {
         responseBuffer.push({ type: "message", body: "⚠️ Reply error: " + err.message, attachments: [], timestamp: Date.now() });
@@ -620,12 +649,25 @@ module.exports = function mountDashboard(app) {
       messageReply: null,
     };
 
-    const vSendMessage = async (api, msgData) =>
-      vApi.sendMessage(
-        { body: msgData.message || "", attachment: msgData.attachment },
-        msgData.threadID,
-        msgData.messageID || null
+    const vSendMessage = async (api, msgData) => {
+      const { message, attachment, threadID: tid, messageID: replyMsgID, replyHandler, senderID: authorID } = msgData;
+      const fakeInfo = await vApi.sendMessage(
+        { body: message || "", attachment },
+        tid || ("guest_" + uid),
+        replyMsgID || null
       );
+      if (replyHandler && typeof replyHandler === "function" && fakeInfo?.messageID) {
+        if (!global._guestReplyListeners) global._guestReplyListeners = new Map();
+        global._guestReplyListeners.set(fakeInfo.messageID, {
+          callback:  replyHandler,
+          author:    authorID ? String(authorID) : String(uid),
+          expiresAt: Date.now() + (global.config?.replyTimeout || 300) * 1000,
+          uid,
+          oneShot:   true,
+        });
+      }
+      return fakeInfo;
+    };
 
     try {
       if (global.trackUsage) global.trackUsage(cmdName);
