@@ -19,7 +19,7 @@
   <meta name="google" content="notranslate">
   <title>Shadow Garden</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <style>   
+  <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#f4f4f2;--surface:#fff;--border:#e6e6e3;--text:#181818;--muted:#888882;
@@ -28,6 +28,7 @@
       --nav-h:60px;--bar-h:58px;
     }
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
     .auth-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
     .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 28px;width:100%;max-width:360px;box-shadow:var(--shadow)}
     .auth-icon{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
@@ -231,14 +232,36 @@
       </div>
       <button class="btn btn-primary" id="loginBtn" onclick="adminLogin()">Sign In</button>
     </div>
-    <div class="auth-sub-form" id="guestForm">
+    <div class="auth-sub-form" id="guestRegisterForm">
       <button class="btn-back" onclick="resetMode()">← Back</button>
       <div class="fg">
-        <label>Your Facebook UID</label>
-        <input type="text" id="guestUidInput" placeholder="e.g. 100012345678901" inputmode="numeric"/>
-        <div class="auth-hint">Your UID is used as your identity. No password needed.</div>
+        <label>Facebook UID</label>
+        <input type="text" id="regUidInput" placeholder="e.g. 100012345678901" inputmode="numeric"/>
+        <div class="auth-hint">Your numeric Facebook UID is your identity.</div>
       </div>
-      <button class="btn btn-primary" id="guestLoginBtn" onclick="guestLogin()">Enter Guest Mode</button>
+      <div class="fg">
+        <label>Create Password</label>
+        <input type="password" id="regPwInput" placeholder="At least 6 characters"/>
+      </div>
+      <div class="fg">
+        <label>Confirm Password</label>
+        <input type="password" id="regPwConfirmInput" placeholder="Repeat password"/>
+      </div>
+      <button class="btn btn-primary" id="guestRegisterBtn" onclick="guestRegister()">Create Account</button>
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px">Already have an account? <span style="color:var(--accent);cursor:pointer;font-weight:500" onclick="switchToGuestLogin()">Sign in</span></p>
+    </div>
+    <div class="auth-sub-form" id="guestLoginForm">
+      <button class="btn-back" onclick="resetMode()">← Back</button>
+      <div class="fg">
+        <label>Facebook UID</label>
+        <input type="text" id="guestUidInput" placeholder="e.g. 100012345678901" inputmode="numeric"/>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <input type="password" id="guestPwInput" placeholder="Your password"/>
+      </div>
+      <button class="btn btn-primary" id="guestLoginBtn" onclick="guestLogin()">Sign In</button>
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px">No account yet? <span style="color:var(--accent);cursor:pointer;font-weight:500" onclick="switchToGuestRegister()">Create one</span></p>
     </div>
     <div class="auth-err" id="authErr"></div>
   </div>
@@ -456,10 +479,9 @@ let GUEST_TOKEN = localStorage.getItem('sg_guest_tok') || '';
 let SESSION_UID = localStorage.getItem('sg_guest_uid') || '';
 
 window.onload = async () => {
-  ['pwInput','guestUidInput'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', e => { if (e.key==='Enter') id==='pwInput' ? adminLogin() : guestLogin(); });
-  });
+  document.getElementById('pwInput')?.addEventListener('keydown', e => { if (e.key==='Enter') adminLogin(); });
+  document.getElementById('regPwConfirmInput')?.addEventListener('keydown', e => { if (e.key==='Enter') guestRegister(); });
+  document.getElementById('guestPwInput')?.addEventListener('keydown', e => { if (e.key==='Enter') guestLogin(); });
   const cmdInput = document.getElementById('cmdInput');
   if (cmdInput) {
     cmdInput.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendCommand(); } });
@@ -496,24 +518,46 @@ function showAuthForMode(mode) {
   document.getElementById('authWrap').style.display = 'flex';
   document.getElementById('modePicker').style.display = 'none';
   document.getElementById('adminForm').classList.remove('visible');
-  document.getElementById('guestForm').classList.remove('visible');
-  document.getElementById(mode === 'admin' ? 'adminForm' : 'guestForm').classList.add('visible');
+  document.getElementById('guestRegisterForm').classList.remove('visible');
+  document.getElementById('guestLoginForm').classList.remove('visible');
+  if (mode === 'admin') document.getElementById('adminForm').classList.add('visible');
+  else document.getElementById('guestLoginForm').classList.add('visible');
 }
 
 function pickMode(mode) {
   document.getElementById('modePicker').style.display = 'none';
   document.getElementById('authErr').textContent = '';
-  document.getElementById(mode === 'admin' ? 'adminForm' : 'guestForm').classList.add('visible');
-  setTimeout(() => document.getElementById(mode === 'admin' ? 'pwInput' : 'guestUidInput')?.focus(), 80);
-  if (mode === 'admin' && window.location.pathname !== '/admin') history.replaceState(null,'','/admin');
-  if (mode === 'guest' && window.location.pathname !== '/guest') history.replaceState(null,'','/guest');
+  if (mode === 'admin') {
+    document.getElementById('adminForm').classList.add('visible');
+    setTimeout(() => document.getElementById('pwInput')?.focus(), 80);
+    if (window.location.pathname !== '/admin') history.replaceState(null,'','/admin');
+  } else {
+    document.getElementById('guestRegisterForm').classList.add('visible');
+    setTimeout(() => document.getElementById('regUidInput')?.focus(), 80);
+    if (window.location.pathname !== '/guest') history.replaceState(null,'','/guest');
+  }
 }
 
 function resetMode() {
   document.getElementById('modePicker').style.display = 'grid';
   document.getElementById('adminForm').classList.remove('visible');
-  document.getElementById('guestForm').classList.remove('visible');
+  document.getElementById('guestRegisterForm').classList.remove('visible');
+  document.getElementById('guestLoginForm').classList.remove('visible');
   document.getElementById('authErr').textContent = '';
+}
+
+function switchToGuestLogin() {
+  document.getElementById('authErr').textContent = '';
+  document.getElementById('guestRegisterForm').classList.remove('visible');
+  document.getElementById('guestLoginForm').classList.add('visible');
+  setTimeout(() => document.getElementById('guestUidInput')?.focus(), 80);
+}
+
+function switchToGuestRegister() {
+  document.getElementById('authErr').textContent = '';
+  document.getElementById('guestLoginForm').classList.remove('visible');
+  document.getElementById('guestRegisterForm').classList.add('visible');
+  setTimeout(() => document.getElementById('regUidInput')?.focus(), 80);
 }
 
 let uptimeBase = 0, uptimeTick = null;
@@ -698,22 +742,64 @@ function clearGuestSession() {
   localStorage.removeItem('sg_guest_uid');
 }
 
-async function guestLogin() {
-  const uid = document.getElementById('guestUidInput').value.trim();
-  const errEl = document.getElementById('authErr');
-  const btn = document.getElementById('guestLoginBtn');
+async function guestRegister() {
+  const uid      = document.getElementById('regUidInput').value.trim();
+  const pw       = document.getElementById('regPwInput').value;
+  const pwc      = document.getElementById('regPwConfirmInput').value;
+  const errEl    = document.getElementById('authErr');
+  const btn      = document.getElementById('guestRegisterBtn');
   errEl.textContent = '';
   if (!uid || !/^\d+$/.test(uid)) { errEl.textContent = 'Enter a valid numeric UID.'; return; }
-  btn.textContent = 'Logging in…'; btn.disabled = true;
+  if (!pw || pw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  if (pw !== pwc) { errEl.textContent = 'Passwords do not match.'; return; }
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
   try {
-    const res = await fetch('/guest/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({uid}) }).then(r=>r.json());
-    if (!res.ok) { errEl.textContent = res.error || 'Login failed.'; return; }
+    const res = await fetch('/guest/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, password: pw })
+    }).then(r => r.json());
+    if (!res.ok) {
+      if (res.exists) { errEl.textContent = res.error; switchToGuestLogin(); document.getElementById('guestUidInput').value = uid; return; }
+      errEl.textContent = res.error || 'Registration failed.'; return;
+    }
+    document.getElementById('regUidInput').value = '';
+    document.getElementById('regPwInput').value = '';
+    document.getElementById('regPwConfirmInput').value = '';
+    switchToGuestLogin();
+    document.getElementById('guestUidInput').value = uid;
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = '✓ Account created! Please sign in.';
+    setTimeout(() => { errEl.textContent = ''; errEl.style.color = ''; }, 4000);
+  } catch { errEl.textContent = 'Could not reach the server.'; }
+  finally { btn.innerHTML = 'Create Account'; btn.disabled = false; }
+}
+
+async function guestLogin() {
+  const uid   = document.getElementById('guestUidInput').value.trim();
+  const pw    = document.getElementById('guestPwInput').value;
+  const errEl = document.getElementById('authErr');
+  const btn   = document.getElementById('guestLoginBtn');
+  errEl.textContent = ''; errEl.style.color = '';
+  if (!uid || !/^\d+$/.test(uid)) { errEl.textContent = 'Enter a valid numeric UID.'; return; }
+  if (!pw) { errEl.textContent = 'Please enter your password.'; return; }
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  try {
+    const res = await fetch('/guest/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, password: pw })
+    }).then(r => r.json());
+    if (!res.ok) {
+      if (res.notFound) { switchToGuestRegister(); document.getElementById('regUidInput').value = uid; }
+      errEl.textContent = res.error || 'Login failed.'; return;
+    }
     GUEST_TOKEN = res.token; SESSION_UID = res.uid;
     localStorage.setItem('sg_guest_tok', GUEST_TOKEN);
     localStorage.setItem('sg_guest_uid', SESSION_UID);
     showGuestApp(uid);
   } catch { errEl.textContent = 'Could not reach the server.'; }
-  finally { btn.textContent = 'Enter Guest Mode'; btn.disabled = false; }
+  finally { btn.innerHTML = 'Sign In'; btn.disabled = false; }
 }
 
 async function guestLogout() {
