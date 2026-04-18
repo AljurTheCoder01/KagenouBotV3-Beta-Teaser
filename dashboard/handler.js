@@ -1,7 +1,8 @@
 /*
-* @Notice Do not change anything or else dashboard will not run properly 
-*
+* @Notice: don't change anything on this code, or else dashboard will not run properly.
+* @Author: Aljurx
 */
+
 const path   = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
@@ -872,6 +873,258 @@ module.exports = function mountDashboard(app) {
       return res.status(500).json({ ok: false, error: err.message, responses: [] });
     }
   });
+
+
+  const MYDAY_TTL = 24 * 60 * 60 * 1000;
+  const SOCIAL_REACTIONS = ['❤️','😂','😮','😢','😡','👍'];
+
+  function guestAuth(req, res) {
+    const tok = req.headers['x-guest-token'];
+    const session = getGuestSession(tok);
+    if (!session) { res.status(401).json({ ok: false, error: 'Not logged in.' }); return null; }
+    return session;
+  }
+
+  function dbRequired(res) {
+    if (!global.db) { res.status(503).json({ ok: false, error: 'Database not connected.' }); return false; }
+    return true;
+  }
+
+  function newId() { return crypto.randomBytes(12).toString('hex'); }
+
+  async function getProfile(uid) {
+    const doc = await global.db.db('guestUsers').findOne({ uid });
+    return {
+      uid,
+      displayName: doc?.displayName || ('User ' + uid.slice(-6)),
+      bio:         doc?.bio         || '',
+      avatar:      doc?.avatar      || null,
+      locked:      doc?.locked      || false,
+      createdAt:   doc?.createdAt   || null,
+    };
+  }
+
+  app.get('/social/profile/:uid', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { uid } = req.params;
+    const isSelf = session.uid === uid;
+    try {
+      const profile = await getProfile(uid);
+      const userRole = getGuestUserRole(uid);
+      const now = Date.now();
+      const mydays = await global.db.db('mydays').find({ uid, expiresAt: { $gt: now } }).sort({ createdAt: -1 }).toArray();
+      if (profile.locked && !isSelf) {
+        return res.json({ ok: true, profile, userRole, mydays, posts: [], locked: true, isSelf });
+      }
+      const posts = await global.db.db('posts').find({ uid }).sort({ createdAt: -1 }).limit(20).toArray();
+      const statsDoc = await global.db.db('guestUsers').findOne({ uid }, { projection: { data: 1 } });
+      return res.json({ ok: true, profile, userRole, mydays, posts, stats: statsDoc?.data || {}, locked: false, isSelf });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.patch('/social/profile', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { displayName, bio, avatar, locked } = req.body || {};
+    const update = {};
+    if (displayName !== undefined) update.displayName = String(displayName).slice(0, 40);
+    if (bio !== undefined)         update.bio         = String(bio).slice(0, 200);
+    if (avatar !== undefined)      update.avatar      = avatar;
+    if (locked  !== undefined)     update.locked      = !!locked;
+    try {
+      await global.db.db('guestUsers').updateOne({ uid: session.uid }, { $set: update }, { upsert: true });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/social/search', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { q } = req.query;
+    if (!q || !q.trim()) return res.status(400).json({ ok: false, error: 'Query required.' });
+    try {
+      const doc = await global.db.db('guestUsers').findOne({ uid: q.trim() });
+      if (!doc) return res.json({ ok: false, error: 'User not found.' });
+      const profile = await getProfile(q.trim());
+      return res.json({ ok: true, profile });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/myday', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { mediaData, mediaType, caption } = req.body || {};
+    if (!mediaData) return res.status(400).json({ ok: false, error: 'mediaData is required.' });
+    if (!['image','video'].includes(mediaType)) return res.status(400).json({ ok: false, error: 'mediaType must be image or video.' });
+    const sizeBytes = Buffer.byteLength(mediaData, 'base64');
+    if (sizeBytes > 5 * 1024 * 1024) return res.status(413).json({ ok: false, error: 'File too large. Max 5MB.' });
+    try {
+      const id = newId();
+      const now = Date.now();
+      await global.db.db('mydays').insertOne({
+        id, uid: session.uid, mediaData, mediaType,
+        caption: (caption || '').slice(0, 200),
+        reactions: {}, createdAt: now, expiresAt: now + MYDAY_TTL,
+      });
+      return res.json({ ok: true, id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/social/myday/:id', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      await global.db.db('mydays').deleteOne({ id: req.params.id, uid: session.uid });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/myday/:id/react', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { reaction } = req.body || {};
+    if (!SOCIAL_REACTIONS.includes(reaction)) return res.status(400).json({ ok: false, error: 'Invalid reaction.' });
+    try {
+      const doc = await global.db.db('mydays').findOne({ id: req.params.id });
+      if (!doc) return res.status(404).json({ ok: false, error: 'MyDay not found.' });
+      const reactions = doc.reactions || {};
+      const prev = reactions[session.uid];
+      if (prev === reaction) { delete reactions[session.uid]; } else { reactions[session.uid] = reaction; }
+      await global.db.db('mydays').updateOne({ id: req.params.id }, { $set: { reactions } });
+      return res.json({ ok: true, reactions });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/post', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { content, mediaData, mediaType } = req.body || {};
+    if (!content?.trim() && !mediaData) return res.status(400).json({ ok: false, error: 'Post needs content or media.' });
+    if (mediaData && Buffer.byteLength(mediaData, 'base64') > 5 * 1024 * 1024)
+      return res.status(413).json({ ok: false, error: 'File too large. Max 5MB.' });
+    try {
+      const id = newId();
+      await global.db.db('posts').insertOne({
+        id, uid: session.uid,
+        content: (content || '').slice(0, 1000),
+        mediaData: mediaData || null, mediaType: mediaType || null,
+        reactions: {}, commentCount: 0, createdAt: Date.now(),
+      });
+      return res.json({ ok: true, id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/social/feed', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const posts = await global.db.db('posts').find({}).sort({ createdAt: -1 }).limit(20).toArray();
+      const profiles = {};
+      for (const p of posts) if (!profiles[p.uid]) profiles[p.uid] = await getProfile(p.uid);
+      return res.json({ ok: true, posts, profiles });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get('/social/post/:id', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const post = await global.db.db('posts').findOne({ id: req.params.id });
+      if (!post) return res.status(404).json({ ok: false, error: 'Post not found.' });
+      const profile = await getProfile(post.uid);
+      const comments = await global.db.db('comments').find({ postId: req.params.id, parentId: null }).sort({ createdAt: 1 }).toArray();
+      const commentProfiles = {};
+      for (const c of comments) {
+        if (!commentProfiles[c.uid]) commentProfiles[c.uid] = await getProfile(c.uid);
+        const replies = await global.db.db('comments').find({ postId: req.params.id, parentId: c.id }).sort({ createdAt: 1 }).toArray();
+        for (const r of replies) if (!commentProfiles[r.uid]) commentProfiles[r.uid] = await getProfile(r.uid);
+        c.replies = replies;
+      }
+      return res.json({ ok: true, post, profile, comments, commentProfiles });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/social/post/:id', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      await global.db.db('posts').deleteOne({ id: req.params.id, uid: session.uid });
+      await global.db.db('comments').deleteMany({ postId: req.params.id });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/post/:id/react', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { reaction } = req.body || {};
+    if (!SOCIAL_REACTIONS.includes(reaction)) return res.status(400).json({ ok: false, error: 'Invalid reaction.' });
+    try {
+      const doc = await global.db.db('posts').findOne({ id: req.params.id });
+      if (!doc) return res.status(404).json({ ok: false, error: 'Post not found.' });
+      const reactions = doc.reactions || {};
+      const prev = reactions[session.uid];
+      if (prev === reaction) { delete reactions[session.uid]; } else { reactions[session.uid] = reaction; }
+      await global.db.db('posts').updateOne({ id: req.params.id }, { $set: { reactions } });
+      return res.json({ ok: true, reactions });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/post/:id/comment', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { text, parentId } = req.body || {};
+    if (!text?.trim()) return res.status(400).json({ ok: false, error: 'Comment text required.' });
+    try {
+      const id = newId();
+      const comment = {
+        id, postId: req.params.id, uid: session.uid,
+        text: text.slice(0, 500),
+        parentId: parentId || null,
+        reactions: {}, createdAt: Date.now(),
+      };
+      await global.db.db('comments').insertOne(comment);
+      await global.db.db('posts').updateOne({ id: req.params.id }, { $inc: { commentCount: 1 } });
+      const profile = await getProfile(session.uid);
+      return res.json({ ok: true, comment, profile });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post('/social/comment/:id/react', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { reaction } = req.body || {};
+    if (!SOCIAL_REACTIONS.includes(reaction)) return res.status(400).json({ ok: false, error: 'Invalid reaction.' });
+    try {
+      const doc = await global.db.db('comments').findOne({ id: req.params.id });
+      if (!doc) return res.status(404).json({ ok: false, error: 'Comment not found.' });
+      const reactions = doc.reactions || {};
+      const prev = reactions[session.uid];
+      if (prev === reaction) { delete reactions[session.uid]; } else { reactions[session.uid] = reaction; }
+      await global.db.db('comments').updateOne({ id: req.params.id }, { $set: { reactions } });
+      return res.json({ ok: true, reactions });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete('/social/comment/:id', async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const doc = await global.db.db('comments').findOne({ id: req.params.id, uid: session.uid });
+      if (!doc) return res.status(404).json({ ok: false, error: 'Comment not found or not yours.' });
+      await global.db.db('comments').deleteOne({ id: req.params.id });
+      await global.db.db('comments').deleteMany({ parentId: req.params.id });
+      await global.db.db('posts').updateOne({ id: doc.postId }, { $inc: { commentCount: -1 } });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  setInterval(async () => {
+    if (!global.db) return;
+    try { await global.db.db('mydays').deleteMany({ expiresAt: { $lt: Date.now() } }); }
+    catch (e) { global.log.error('[MYDAY] Cleanup error: ' + e.message); }
+  }, 60 * 60 * 1000);
 
   global.log.success("[GUEST] Guest mode mounted at /guest");
 };
