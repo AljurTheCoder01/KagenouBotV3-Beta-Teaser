@@ -1,5 +1,6 @@
 /*
-* @Notice do not change anything, or else dashboard will not run properly.
+* @Notice Do not change anything or else dashboard will not run properly 
+*
 */
 const path   = require("path");
 const crypto = require("crypto");
@@ -688,12 +689,13 @@ module.exports = function mountDashboard(app) {
     return responseBuffer;
   }
 
+  const GUEST_COLLECTION = "guestUsers";
   const guestAccounts = new Map();
 
   async function loadGuestAccounts() {
     if (!global.db) { global.log.warn("[GUEST] No DB connected — guest accounts unavailable."); return; }
     try {
-      const all = await global.db.db("guestAccounts").find({}).toArray();
+      const all = await global.db.db(GUEST_COLLECTION).find({}).toArray();
       all.forEach(a => guestAccounts.set(String(a.uid), { passwordHash: a.passwordHash }));
       global.log.info("[GUEST] Loaded " + all.length + " guest accounts from MongoDB.");
     } catch (e) { global.log.error("[GUEST] Failed to load guest accounts: " + e.message); }
@@ -703,9 +705,9 @@ module.exports = function mountDashboard(app) {
   async function saveGuestAccount(uid, passwordHash) {
     guestAccounts.set(uid, { passwordHash });
     if (!global.db) throw new Error("No database connected.");
-    await global.db.db("guestAccounts").updateOne(
+    await global.db.db(GUEST_COLLECTION).updateOne(
       { uid },
-      { $set: { uid, passwordHash } },
+      { $set: { uid, passwordHash, createdAt: new Date() } },
       { upsert: true }
     );
   }
@@ -714,8 +716,11 @@ module.exports = function mountDashboard(app) {
     if (guestAccounts.has(uid)) return guestAccounts.get(uid);
     if (!global.db) return null;
     try {
-      const doc = await global.db.db("guestAccounts").findOne({ uid });
-      if (doc) { guestAccounts.set(uid, { passwordHash: doc.passwordHash }); return { passwordHash: doc.passwordHash }; }
+      const doc = await global.db.db(GUEST_COLLECTION).findOne({ uid });
+      if (doc) {
+        guestAccounts.set(uid, { passwordHash: doc.passwordHash });
+        return { passwordHash: doc.passwordHash };
+      }
     } catch (e) { global.log.error("[GUEST] DB lookup error: " + e.message); }
     return null;
   }
@@ -723,6 +728,44 @@ module.exports = function mountDashboard(app) {
   function hashPassword(password) {
     return crypto.createHash("sha256").update(password + "sgbot_salt_2025").digest("hex");
   }
+
+  app.post("/data/guests/reset", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      await global.db.db(GUEST_COLLECTION).deleteMany({});
+      guestAccounts.clear();
+      global.log.warn("[DASHBOARD] All guest accounts wiped and collection reset.");
+      return res.json({ ok: true, message: "All guest accounts deleted. Fresh collection ready." });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  app.get("/data/guests", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      const all = await global.db.db(GUEST_COLLECTION).find({}, { projection: { uid: 1, createdAt: 1, _id: 0 } }).toArray();
+      return res.json({ ok: true, total: all.length, guests: all });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  app.delete("/data/guests/:uid", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    const { uid } = req.params;
+    try {
+      await global.db.db(GUEST_COLLECTION).deleteOne({ uid });
+      guestAccounts.delete(uid);
+      global.log.info("[DASHBOARD] Guest account deleted: " + uid);
+      return res.json({ ok: true });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  });
 
   app.get("/guest", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
