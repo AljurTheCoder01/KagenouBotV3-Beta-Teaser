@@ -292,7 +292,7 @@ module.exports = function mountDashboard(app) {
       }
       if (a && typeof a === "object" && a.url) {
         return { kind: "url", url: a.url };
-      })
+      }
       if (a && typeof a === "object" && a.data && Buffer.isBuffer(a.data)) {
         const finalMime = hintMime || detectMime(a.data);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + a.data.toString("base64"), size: a.data.length };
