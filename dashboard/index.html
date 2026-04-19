@@ -566,7 +566,7 @@
 
 <div id="guestApp">
   <header class="g-topbar">
-    <div class="bot-avatar" onclick="openMyProfile()" style="cursor:pointer">
+    <div class="bot-avatar" style="cursor:default">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
     <div class="topbar-info">
@@ -613,17 +613,6 @@
     </div>
   </div>
 
-  <div class="g-view" id="gv-feed" style="padding-bottom:56px">
-    <div class="myday-row" id="mydayRow"></div>
-    <div class="g-scroll" id="feedScroll">
-      <div class="empty" style="padding:40px 16px">Loading feed…</div>
-    </div>
-  </div>
-
-  <div class="g-view" id="gv-profile" style="padding-bottom:56px">
-    <div class="g-scroll" id="profileScroll"></div>
-  </div>
-
   <div class="g-view" id="gv-search" style="padding-bottom:56px">
     <div class="search-bar-wrap">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -637,29 +626,14 @@
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Chat
     </button>
-    <button class="g-bnav-item" onclick="switchGuestView('feed',this)">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Feed
-    </button>
-    <button class="g-bnav-item" onclick="switchGuestView('search',this)">
+        <button class="g-bnav-item" onclick="switchGuestView('search',this)">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Search
     </button>
-    <button class="g-bnav-item" onclick="switchGuestView('profile',this)">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profile
-    </button>
-  </nav>
+      </nav>
 </div>
 
-<div class="reaction-picker" id="reactionPicker">
-  <div style="text-align:center;font-size:13px;font-weight:600;color:var(--muted)">React</div>
-  <div class="reaction-picker-emojis" id="reactionPickerEmojis"></div>
-</div>
-<div class="rp-overlay" id="rpOverlay" onclick="closeReactionPicker()"></div>
 
-<div class="myday-viewer" id="mydayViewer">
-  <div class="myday-progress" id="mydayProgress"></div>
   <div class="myday-viewer-header">
     <div class="myday-viewer-avatar"><img id="mvAvatar" src="" onerror="this.style.display='none'"/></div>
     <div style="flex:1"><div class="myday-viewer-name" id="mvName"></div><div class="myday-viewer-time" id="mvTime"></div></div>
@@ -670,32 +644,7 @@
   <div class="myday-viewer-reactions" id="mvReactions"></div>
 </div>
 
-<div class="compose-overlay" id="composeOverlay">
-  <div class="compose-header">
-    <button class="g-icon-btn" onclick="closeCompose()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    <span class="compose-title" id="composeTitle">New Post</span>
-    <button class="btn btn-primary btn-sm" onclick="submitCompose()" id="composeSubmitBtn">Post</button>
-  </div>
-  <div class="compose-body">
-    <img id="composeMediaPreview" class="compose-media-preview" style="display:none"/>
-    <video id="composeVideoPreview" class="compose-media-preview" controls style="display:none"></video>
-    <textarea id="composeText" placeholder="What's on your mind?" style="width:100%;min-height:100px;border:1px solid var(--border);border-radius:12px;padding:12px;font-size:15px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);outline:0;resize:none"></textarea>
-  </div>
-  <div class="compose-actions">
-    <label class="btn btn-ghost" style="cursor:pointer">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      Photo/Video
-      <input type="file" id="composeFileInput" accept="image/*,video/*" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none" onchange="composeFileChanged(this)"/>
-    </label>
-  </div>
-</div>
 
-<div class="compose-overlay" id="mydayCompose">
-  <div class="compose-header">
-    <button class="g-icon-btn" onclick="closeMydayCompose()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    <span class="compose-title">Add to MyDay</span>
-    <button class="btn btn-primary btn-sm" onclick="submitMyday()" id="mydaySubmitBtn">Share</button>
-  </div>
   <div class="compose-body">
     <img id="mydayMediaPreview" class="compose-media-preview" style="display:none"/>
     <video id="mydayVideoPreview" class="compose-media-preview" controls style="display:none"></video>
@@ -1152,7 +1101,6 @@ function showGuestApp(uid) {
   document.getElementById('guestSubtitle').textContent = `Guest • UID: ${uid}`;
   history.replaceState(null,'','/guest');
   guestLoadCommands();
-  loadMydayRow();
 }
 
 const ROLE_LABELS = ['User','Admin','Moderator','VIP','Developer'];
@@ -1454,45 +1402,10 @@ function guestAutoResize() { this.style.height='40px'; this.style.height=Math.mi
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-const SOCIAL_REACTIONS = ['❤️','😂','😮','😢','😡','👍'];
 let currentGuestView = 'chat';
-let reactionPickerTarget = null;
-let mydayViewerItems = [], mydayViewerIdx = 0, mydayTimer = null;
-let composeMode = 'post';
-let composeFileData = null, composeFileType = null;
-let mydayFileData = null, mydayFileType = null;
 
 function sgFetch(path, opts={}) {
   return fetch(path, { ...opts, headers: { 'Content-Type':'application/json', 'x-guest-token': GUEST_TOKEN, ...(opts.headers||{}) } }).then(r=>r.json());
-}
-
-function timeAgo(ts) {
-  const s = Math.floor((Date.now()-ts)/1000);
-  if (s<60) return 'Just now';
-  if (s<3600) return Math.floor(s/60)+'m ago';
-  if (s<86400) return Math.floor(s/3600)+'h ago';
-  return Math.floor(s/86400)+'d ago';
-}
-
-function avatarEl(profile, size=36) {
-  const d = document.createElement('div');
-  d.style.cssText = 'width:'+size+'px;height:'+size+'px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0';
-  if (profile.avatar) {
-    const img = document.createElement('img');
-    img.src = profile.avatar; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
-    img.onerror = () => { img.remove(); d.textContent = (profile.displayName||'?')[0].toUpperCase(); d.style.color='#fff'; d.style.fontWeight='700'; d.style.fontSize=(size*0.4)+'px'; };
-    d.appendChild(img);
-  } else {
-    d.textContent = (profile.displayName||'?')[0].toUpperCase();
-    d.style.color='#fff'; d.style.fontWeight='700'; d.style.fontSize=(size*0.4)+'px';
-  }
-  return d;
-}
-
-function reactionSummary(reactions) {
-  const counts = {};
-  Object.values(reactions||{}).forEach(r => counts[r]=(counts[r]||0)+1);
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([e,n])=>e+(n>1?n:'')).join(' ');
 }
 
 function switchGuestView(id, btn) {
@@ -1501,396 +1414,9 @@ function switchGuestView(id, btn) {
   document.getElementById('gv-'+id).classList.add('active');
   btn.classList.add('active');
   currentGuestView = id;
-  if (id==='feed') loadFeed();
-  if (id==='profile') loadMyProfile();
 }
 
-function openMyProfile() {
-  const btn = document.querySelector('.g-bnav-item:last-child');
-  switchGuestView('profile', btn);
-}
-
-async function loadMydayRow() {
-  const row = document.getElementById('mydayRow');
-  row.innerHTML = '';
-  const addBtn = document.createElement('div');
-  addBtn.className='myday-item';
-  addBtn.innerHTML='<div class="myday-ring add"><div class="myday-thumb"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--muted)" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div><span class="myday-label">My Day</span>';
-  addBtn.onclick = () => openMydayCompose();
-  row.appendChild(addBtn);
-
-  const d = await sgFetch('/social/profile/'+SESSION_UID).catch(()=>null);
-  if (!d?.mydays) return;
-  if (d.mydays.length>0) {
-    const me = d.mydays[0];
-    const item = document.createElement('div');
-    item.className='myday-item';
-    const ring = document.createElement('div'); ring.className='myday-ring';
-    const thumb = document.createElement('div'); thumb.className='myday-thumb';
-    const img = document.createElement('img'); img.src='data:'+me.mediaType+'/jpeg;base64,'+me.mediaData; img.style='width:100%;height:100%;object-fit:cover;border-radius:50%';
-    thumb.appendChild(img); ring.appendChild(thumb); item.appendChild(ring);
-    const lbl=document.createElement('span'); lbl.className='myday-label'; lbl.textContent='Your Day';
-    item.appendChild(lbl);
-    item.onclick=()=>openMydayViewer([me], d.profile);
-    row.insertBefore(item, addBtn.nextSibling);
-  }
-}
-
-function openMydayViewer(items, profile) {
-  mydayViewerItems = items; mydayViewerIdx = 0;
-  document.getElementById('mydayViewer').classList.add('open');
-  showMydaySlide(profile);
-}
-
-function showMydaySlide(profile) {
-  const item = mydayViewerItems[mydayViewerIdx];
-  if (!item) { closeMydayViewer(); return; }
-  document.getElementById('mvName').textContent = profile.displayName;
-  document.getElementById('mvTime').textContent = timeAgo(item.createdAt);
-  if (profile.avatar) { document.getElementById('mvAvatar').src = profile.avatar; }
-  const media = document.getElementById('mvMedia'); media.innerHTML='';
-  if (item.mediaType==='image') {
-    const img=document.createElement('img'); img.src='data:image/jpeg;base64,'+item.mediaData; img.style='max-width:100%;max-height:100%;object-fit:contain'; media.appendChild(img);
-  } else {
-    const vid=document.createElement('video'); vid.src='data:video/mp4;base64,'+item.mediaData; vid.controls=true; vid.autoplay=true; vid.style='max-width:100%;max-height:100%'; media.appendChild(vid);
-  }
-  document.getElementById('mvCaption').textContent = item.caption||'';
-  const prog = document.getElementById('mydayProgress'); prog.innerHTML='';
-  mydayViewerItems.forEach((_,i) => {
-    const w=document.createElement('div'); w.className='myday-prog-bar';
-    const f=document.createElement('div'); f.className='myday-prog-fill';
-    f.style.width = i<mydayViewerIdx?'100%':i===mydayViewerIdx?'0%':'0%';
-    w.appendChild(f); prog.appendChild(w);
-  });
-  if (mydayTimer) clearTimeout(mydayTimer);
-  const fill=prog.children[mydayViewerIdx].firstChild;
-  fill.style.transition='none'; fill.style.width='0%';
-  requestAnimationFrame(()=>{ fill.style.transition='width 5s linear'; fill.style.width='100%'; });
-  mydayTimer=setTimeout(()=>{ mydayViewerIdx++; showMydaySlide(profile); }, 5000);
-
-  const rDiv=document.getElementById('mvReactions'); rDiv.innerHTML='';
-  const myReaction=item.reactions?.[SESSION_UID];
-  SOCIAL_REACTIONS.forEach(e=>{
-    const b=document.createElement('button'); b.className='myday-react-btn'+(myReaction===e?' reacted':'');
-    b.textContent=e; b.onclick=async()=>{
-      const r=await sgFetch('/social/myday/'+item.id+'/react',{method:'POST',body:JSON.stringify({reaction:e})}).catch(()=>null);
-      if(r?.ok){ item.reactions=r.reactions; showMydaySlide(profile); }
-    };
-    rDiv.appendChild(b);
-  });
-}
-
-function closeMydayViewer() {
-  if(mydayTimer) clearTimeout(mydayTimer);
-  document.getElementById('mydayViewer').classList.remove('open');
-}
-
-async function loadFeed() {
-  const scroll = document.getElementById('feedScroll');
-  scroll.innerHTML='<div class="empty" style="padding:40px 16px">Loading…</div>';
-  await loadMydayRow();
-  const d = await sgFetch('/social/feed').catch(()=>null);
-  if (!d?.ok) { scroll.innerHTML='<div class="empty" style="padding:40px 16px">Failed to load feed.</div>'; return; }
-  scroll.innerHTML='';
-  const fab=document.createElement('button');
-  fab.style.cssText='position:sticky;top:8px;float:right;margin:8px 12px 0 0;z-index:10;width:44px;height:44px;border-radius:50%;background:var(--accent);border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.18)';
-  fab.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff" fill="none" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-  fab.onclick=()=>openCompose('post');
-  scroll.appendChild(fab);
-  if (!d.posts.length) { scroll.insertAdjacentHTML('beforeend','<div class="empty" style="padding:40px 16px">No posts yet. Be the first!</div>'); return; }
-  d.posts.forEach(p=>scroll.appendChild(buildPostCard(p, d.profiles[p.uid])));
-}
-
-function buildPostCard(post, profile) {
-  const card=document.createElement('div'); card.className='post-card';
-  const myReaction=post.reactions?.[SESSION_UID];
-  const reactionCount=Object.keys(post.reactions||{}).length;
-  const summary=reactionSummary(post.reactions);
-  const isMine=post.uid===SESSION_UID;
-  card.innerHTML=`
-    <div class="post-header">
-      <div class="post-avatar" onclick="viewProfile('${post.uid}')"></div>
-      <div class="post-meta">
-        <div class="post-name" onclick="viewProfile('${post.uid}')">${escHtml(profile?.displayName||'User')}</div>
-        <div class="post-time">${timeAgo(post.createdAt)}</div>
-      </div>
-      ${isMine?`<button class="post-more" onclick="deletePost('${post.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:''}
-    </div>
-    ${post.content?'<div class="post-content">'+escHtml(post.content)+'</div>':''}
-    ${post.mediaData?'<div style="overflow:hidden">'+renderPostMedia(post)+'</div>':''}
-    ${summary?'<div class="post-reactions-row">'+summary+'<span style="margin-left:4px;color:var(--muted)">'+reactionCount+'</span></div>':''}
-    <div class="post-actions">
-      <button class="post-action-btn ${myReaction?'reacted':''}" onclick="openReactionPicker('post','${post.id}',this)">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-        ${myReaction||'React'}
-      </button>
-      <button class="post-action-btn" onclick="openPostDetail('${post.id}')">
-        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        ${post.commentCount||0} Comment${post.commentCount!==1?'s':''}
-      </button>
-      <button class="post-action-btn" onclick="copyPostLink('${post.id}')">
-        <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        Copy Link
-      </button>
-    </div>
-  `;
-  card.querySelector('.post-avatar').appendChild(avatarEl(profile));
-  return card;
-}
-
-function renderPostMedia(post) {
-  if (post.mediaType==='image') return '<img class="post-media" src="data:image/jpeg;base64,'+post.mediaData+'" loading="lazy"/>';
-  return '<video class="post-media" src="data:video/mp4;base64,'+post.mediaData+'" controls playsinline></video>';
-}
-
-function copyPostLink(id) {
-  const url = location.origin+'/social/post/'+id;
-  navigator.clipboard?.writeText(url).then(()=>socialToast('Link copied!')).catch(()=>socialToast('Link: '+url));
-}
-
-async function deletePost(id) {
-  if (!confirm('Delete this post?')) return;
-  const d=await sgFetch('/social/post/'+id,{method:'DELETE'}).catch(()=>({ok:false}));
-  if (d.ok) { loadFeed(); socialToast('Post deleted.'); }
-  else socialToast('Failed to delete.');
-}
-
-async function openPostDetail(postId) {
-  const d=await sgFetch('/social/post/'+postId).catch(()=>null);
-  if(!d?.ok) { socialToast('Failed to load post.'); return; }
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:var(--surface);z-index:260;display:flex;flex-direction:column';
-  overlay.innerHTML=`
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button onclick="this.closest('[style]').remove()" style="width:32px;height:32px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--text)" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <span style="font-size:16px;font-weight:600">Post</span>
-    </div>
-    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch" id="pdScroll"></div>
-    <div class="post-input-bar">
-      <textarea id="pdInput" placeholder="Write a comment…" oninput="this.style.height='36px';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
-      <button class="post-send-btn" onclick="submitComment('${postId}',null,document.getElementById('pdInput'),document.getElementById('pdComments'))">
-        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-  const scroll=overlay.querySelector('#pdScroll');
-  scroll.appendChild(buildPostCard(d.post, d.profile));
-  const cWrap=document.createElement('div'); cWrap.id='pdComments'; cWrap.className='comment-wrap';
-  d.comments.forEach(c=>cWrap.appendChild(buildCommentEl(c,d.commentProfiles,postId,overlay)));
-  scroll.appendChild(cWrap);
-}
-
-function buildCommentEl(c, profiles, postId, overlay) {
-  const profile=profiles[c.uid]||{displayName:'User',avatar:null};
-  const isMine=c.uid===SESSION_UID;
-  const myReaction=c.reactions?.[SESSION_UID];
-  const wrap=document.createElement('div'); wrap.className='comment-item'; wrap.dataset.cid=c.id;
-  const av=avatarEl(profile,28); av.style.cursor='pointer'; av.onclick=()=>viewProfile(c.uid);
-  const bubble=document.createElement('div'); bubble.className='comment-bubble';
-  const inner=document.createElement('div'); inner.className='comment-bubble-inner';
-  inner.innerHTML='<div class="comment-author">'+escHtml(profile.displayName)+'</div><div class="comment-text">'+escHtml(c.text)+'</div>';
-  const acts=document.createElement('div'); acts.className='comment-actions';
-  const reactBtn=document.createElement('button'); reactBtn.className='comment-action'+(myReaction?' reacted':'');
-  reactBtn.textContent=myReaction||(Object.keys(c.reactions||{}).length>0?reactionSummary(c.reactions):'Like');
-  reactBtn.onclick=()=>openReactionPicker('comment',c.id,reactBtn);
-  const replyBtn=document.createElement('button'); replyBtn.className='comment-action'; replyBtn.textContent='Reply';
-  replyBtn.onclick=()=>{
-    const inp=overlay.querySelector('#pdInput'); inp.value=''; inp.placeholder='Replying to '+profile.displayName+'…'; inp.focus();
-    overlay.querySelector('.post-send-btn').onclick=()=>submitComment(postId,c.id,inp,overlay.querySelector('#pdComments'));
-  };
-  acts.appendChild(reactBtn);
-  acts.appendChild(replyBtn);
-  if(isMine){const del=document.createElement('button');del.className='comment-action';del.textContent='Delete';del.onclick=async()=>{await sgFetch('/social/comment/'+c.id,{method:'DELETE'});wrap.remove();};acts.appendChild(del);}
-  bubble.appendChild(inner); bubble.appendChild(acts);
-  if(c.replies?.length){
-    const repWrap=document.createElement('div'); repWrap.className='comment-replies';
-    c.replies.forEach(r=>repWrap.appendChild(buildCommentEl(r,profiles,postId,overlay)));
-    bubble.appendChild(repWrap);
-  }
-  wrap.appendChild(av); wrap.appendChild(bubble);
-  return wrap;
-}
-
-async function submitComment(postId, parentId, input, container) {
-  const text=input.value.trim(); if(!text) return;
-  input.value=''; input.style.height='36px'; input.placeholder='Write a comment…';
-  const d=await sgFetch('/social/post/'+postId+'/comment',{method:'POST',body:JSON.stringify({text,parentId:parentId||null})}).catch(()=>null);
-  if(!d?.ok){socialToast('Failed to post comment.');return;}
-  const dummy={}; dummy[d.comment.uid]=d.profile;
-  if(parentId){
-    const parentEl=container.querySelector('[data-cid="'+parentId+'"]');
-    if(parentEl){
-      let repWrap=parentEl.querySelector('.comment-replies');
-      if(!repWrap){repWrap=document.createElement('div');repWrap.className='comment-replies';parentEl.querySelector('.comment-bubble').appendChild(repWrap);}
-      repWrap.appendChild(buildCommentEl({...d.comment,replies:[]},dummy,postId,container.closest('[style]')));
-    }
-  } else {
-    container.appendChild(buildCommentEl({...d.comment,replies:[]},dummy,postId,container.closest('[style]')));
-  }
-}
-
-function openReactionPicker(type, id, triggerEl) {
-  reactionPickerTarget={type,id,triggerEl};
-  const emojis=document.getElementById('reactionPickerEmojis'); emojis.innerHTML='';
-  SOCIAL_REACTIONS.forEach(e=>{
-    const b=document.createElement('button'); b.className='rp-btn'; b.textContent=e;
-    b.onclick=()=>submitReaction(type,id,e,triggerEl);
-    emojis.appendChild(b);
-  });
-  document.getElementById('reactionPicker').classList.add('open');
-  document.getElementById('rpOverlay').classList.add('open');
-}
-
-function closeReactionPicker(){
-  document.getElementById('reactionPicker').classList.remove('open');
-  document.getElementById('rpOverlay').classList.remove('open');
-  reactionPickerTarget=null;
-}
-
-async function submitReaction(type,id,reaction,triggerEl){
-  closeReactionPicker();
-  const route=type==='post'?'/social/post/'+id+'/react':type==='comment'?'/social/comment/'+id+'/react':'/social/myday/'+id+'/react';
-  const d=await sgFetch(route,{method:'POST',body:JSON.stringify({reaction})}).catch(()=>null);
-  if(d?.ok && triggerEl){
-    const myNew=d.reactions[SESSION_UID];
-    if(triggerEl.classList.contains('post-action-btn')){ triggerEl.childNodes[triggerEl.childNodes.length-1].textContent=' '+(myNew||'React'); triggerEl.classList.toggle('reacted',!!myNew); }
-    else if(triggerEl.classList.contains('comment-action')){ triggerEl.textContent=myNew||(Object.keys(d.reactions).length>0?reactionSummary(d.reactions):'Like'); triggerEl.classList.toggle('reacted',!!myNew); }
-  }
-}
-
-async function loadMyProfile() { await viewProfile(SESSION_UID, true); }
-
-async function viewProfile(uid, isSelf) {
-  const scroll=document.getElementById('profileScroll');
-  scroll.innerHTML='<div class="empty" style="padding:40px 16px">Loading…</div>';
-  if(!isSelf) {
-    const btn=document.querySelector('.g-bnav-item:last-child');
-    switchGuestView('profile',btn);
-  }
-  const d=await sgFetch('/social/profile/'+uid).catch(()=>null);
-  if(!d?.ok){scroll.innerHTML='<div class="empty" style="padding:40px 16px">Failed to load profile.</div>';return;}
-  const {profile,mydays,posts,stats,locked,isSelf:self}=d;
-  scroll.innerHTML='';
-  const cover=document.createElement('div'); cover.className='profile-cover';
-  const avWrap=document.createElement('div'); avWrap.className='profile-avatar-wrap';
-  const avLg=document.createElement('div'); avLg.className='profile-avatar-lg';
-  if(profile.avatar){const img=document.createElement('img');img.src=profile.avatar;img.style='width:100%;height:100%;object-fit:cover';avLg.appendChild(img);}
-  else{avLg.appendChild(avatarEl(profile,48));}
-  avWrap.appendChild(avLg); cover.appendChild(avWrap);
-  scroll.appendChild(cover);
-
-  const info=document.createElement('div'); info.className='profile-info';
-  info.innerHTML='<div class="profile-name">'+escHtml(profile.displayName)+'</div><div class="profile-uid">UID: '+escHtml(profile.uid)+'</div>'+(profile.bio?'<div class="profile-bio">'+escHtml(profile.bio)+'</div>':'');
-  const pacts=document.createElement('div'); pacts.className='profile-actions';
-  if(self){
-    const editBtn=document.createElement('button'); editBtn.className='btn btn-outline btn-sm'; editBtn.textContent='Edit Profile'; editBtn.onclick=()=>openEditProfile(profile);
-    const lockBtn=document.createElement('button'); lockBtn.className='btn btn-ghost btn-sm'; lockBtn.textContent=profile.locked?'🔒 Locked':'🔓 Unlock'; lockBtn.onclick=async()=>{await sgFetch('/social/profile',{method:'PATCH',body:JSON.stringify({locked:!profile.locked})});loadMyProfile();};
-    pacts.appendChild(editBtn); pacts.appendChild(lockBtn);
-  }
-  info.appendChild(pacts); scroll.appendChild(info);
-
-  if(!locked||self){
-    const statsEl=document.createElement('div'); statsEl.className='profile-stats';
-    const sc=stats?.reactions||0, mc=stats?.messages||0;
-    statsEl.innerHTML='<div class="profile-stat"><div class="profile-stat-val">'+posts.length+'</div><div class="profile-stat-lbl">Posts</div></div><div class="profile-stat"><div class="profile-stat-val">'+mc+'</div><div class="profile-stat-lbl">Messages</div></div><div class="profile-stat"><div class="profile-stat-val">'+sc+'</div><div class="profile-stat-lbl">Reactions</div></div>';
-    scroll.appendChild(statsEl);
-  }
-
-  if(mydays.length){
-    const mdRow=document.createElement('div'); mdRow.className='myday-row';
-    mydays.forEach(m=>{
-      const item=document.createElement('div'); item.className='myday-item';
-      const ring=document.createElement('div'); ring.className='myday-ring';
-      const thumb=document.createElement('div'); thumb.className='myday-thumb';
-      const img=document.createElement('img'); img.src='data:image/jpeg;base64,'+m.mediaData; img.style='width:100%;height:100%;object-fit:cover;border-radius:50%';
-      thumb.appendChild(img); ring.appendChild(thumb); item.appendChild(ring);
-      const t=new Date(m.expiresAt); const left=Math.max(0,Math.round((m.expiresAt-Date.now())/3600000));
-      const lbl=document.createElement('span'); lbl.className='myday-label'; lbl.textContent=left+'h left';
-      item.appendChild(lbl); item.onclick=()=>openMydayViewer(mydays,profile);
-      mdRow.appendChild(item);
-    });
-    const mdTitle=document.createElement('div'); mdTitle.style.cssText='padding:12px 14px 0;font-size:13px;font-weight:600;color:var(--muted)'; mdTitle.textContent='MY DAY';
-    scroll.appendChild(mdTitle); scroll.appendChild(mdRow);
-  }
-
-  if(!locked||self){
-    const pTitle=document.createElement('div'); pTitle.style.cssText='padding:12px 14px 0;font-size:13px;font-weight:600;color:var(--muted)'; pTitle.textContent='POSTS';
-    scroll.appendChild(pTitle);
-    if(!posts.length){scroll.insertAdjacentHTML('beforeend','<div class="empty" style="padding:24px 16px">No posts yet.</div>');}
-    else posts.forEach(p=>scroll.appendChild(buildPostCard(p,profile)));
-  } else {
-    scroll.insertAdjacentHTML('beforeend','<div class="empty" style="padding:32px 16px">🔒 This profile is locked.</div>');
-  }
-}
-
-function openEditProfile(profile) {
-  const ov=document.createElement('div');
-  ov.id='editProfileOverlay';
-  ov.style.cssText='position:fixed;inset:0;background:var(--surface);z-index:260;display:flex;flex-direction:column';
-  ov.innerHTML=`
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)">
-      <button onclick="document.getElementById('editProfileOverlay').remove()" style="width:32px;height:32px;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--text)" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <span style="font-size:16px;font-weight:600;flex:1">Edit Profile</span>
-      <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save</button>
-    </div>
-    <div style="flex:1;padding:20px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
-      <div>
-        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Display Name</label>
-        <input id="epName" type="text" value="${escHtml(profile.displayName)}" maxlength="40" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--text);outline:0"/>
-      </div>
-      <div>
-        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Bio</label>
-        <textarea id="epBio" maxlength="200" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--text);outline:0;resize:none;min-height:80px">${escHtml(profile.bio||'')}</textarea>
-      </div>
-      <div>
-        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Avatar</label>
-        <label class="btn btn-ghost" style="cursor:pointer">
-          Choose Photo
-          <input type="file" accept="image/*" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none" onchange="epAvatarChanged(this)"/>
-        </label>
-        <img id="epAvatarPreview" style="display:none;width:60px;height:60px;border-radius:50%;object-fit:cover;margin-top:8px" src=""/>
-      </div>
-    </div>
-  `;
-  if(profile.avatar){const prev=ov.querySelector('#epAvatarPreview');prev.src=profile.avatar;prev.style.display='block';}
-  document.body.appendChild(ov);
-}
-
-function epAvatarChanged(inp) {
-  const file=inp.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const prev=document.getElementById('epAvatarPreview');
-    if(!prev) return;
-    prev.src=e.target.result; prev.style.display='block';
-    prev.dataset.b64=e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function saveProfile(ov) {
-  const name = document.getElementById('epName')?.value.trim();
-  const bio  = document.getElementById('epBio')?.value.trim();
-  const avatarPrev = document.getElementById('epAvatarPreview');
-  const body = { displayName: name, bio };
-  if (avatarPrev && avatarPrev.dataset.b64) {
-    body.avatar = avatarPrev.dataset.b64;
-  }
-  const overlay = document.getElementById('editProfileOverlay');
-  const saveBtn = overlay?.querySelector('.btn-primary');
-  if (saveBtn) { saveBtn.innerHTML = '<span class="spinner"></span>'; saveBtn.disabled = true; }
-  const d = await sgFetch('/social/profile', { method: 'PATCH', body: JSON.stringify(body) }).catch(() => null);
-  if (saveBtn) { saveBtn.innerHTML = 'Save'; saveBtn.disabled = false; }
-  if (!d?.ok) { socialToast(d?.error || 'Failed to save.'); return; }
-  overlay?.remove();
-  loadMyProfile();
-  socialToast('Profile updated!');
-}
-
-let socialSearchTimer=null;
+let socialSearchTimer = null;
 function socialSearchDebounce(){
   clearTimeout(socialSearchTimer);
   socialSearchTimer=setTimeout(async()=>{
@@ -1900,78 +1426,16 @@ function socialSearchDebounce(){
     el.innerHTML='<div class="empty" style="padding:40px 16px">Searching…</div>';
     const d=await sgFetch('/social/search?q='+encodeURIComponent(q)).catch(()=>null);
     if(!d?.ok){el.innerHTML='<div class="empty" style="padding:40px 16px">'+escHtml(d?.error||'Not found.')+'</div>';return;}
-    el.innerHTML='';
-    const card=document.createElement('div');
-    card.style.cssText='display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;background:var(--surface);border-bottom:1px solid var(--border)';
-    card.appendChild(avatarEl(d.profile,44));
-    card.innerHTML+='<div><div style="font-size:14px;font-weight:600">'+escHtml(d.profile.displayName)+'</div><div style="font-size:12px;color:var(--muted);font-family:monospace">'+escHtml(d.profile.uid)+'</div></div>';
-    card.onclick=()=>viewProfile(d.profile.uid);
-    el.appendChild(card);
+    const p=d.profile;
+    const ROLE_LABELS=['User','Admin','Moderator','VIP','Developer'];
+    const ROLE_COLORS=['','#d97706','#2563eb','#7c3aed','#16a34a'];
+    const role=d.userRole||0;
+    const roleBadge=role>0?`<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:${ROLE_COLORS[role]}18;color:${ROLE_COLORS[role]};margin-left:6px">${ROLE_LABELS[role]}</span>`:'';
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface);border-bottom:1px solid var(--border)">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">${p.avatar?`<img src="${escHtml(p.avatar)}" style="width:100%;height:100%;object-fit:cover"/>`:`<span style="color:#fff;font-size:18px;font-weight:700">${escHtml((p.displayName||'?')[0].toUpperCase())}</span>`}</div>
+      <div><div style="font-size:15px;font-weight:600">${escHtml(p.displayName)}${roleBadge}</div><div style="font-size:12px;color:var(--muted);font-family:monospace;margin-top:2px">UID: ${escHtml(p.uid)}</div>${p.bio?`<div style="font-size:13px;color:var(--muted);margin-top:4px">${escHtml(p.bio)}</div>`:''}</div>
+    </div>`;
   },400);
-}
-
-function openCompose(mode) {
-  composeMode=mode; composeFileData=null; composeFileType=null;
-  document.getElementById('composeText').value='';
-  document.getElementById('composeMediaPreview').style.display='none';
-  document.getElementById('composeVideoPreview').style.display='none';
-  document.getElementById('composeFileInput').value='';
-  document.getElementById('composeTitle').textContent='New Post';
-  document.getElementById('composeOverlay').classList.add('open');
-}
-function closeCompose(){ document.getElementById('composeOverlay').classList.remove('open'); }
-
-function composeFileChanged(inp) {
-  const file=inp.files[0]; if(!file) return;
-  composeFileType=file.type.startsWith('video')?'video':'image';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    composeFileData=e.target.result.split(',')[1];
-    const imgPrev=document.getElementById('composeMediaPreview');
-    const vidPrev=document.getElementById('composeVideoPreview');
-    if(composeFileType==='image'){imgPrev.src=e.target.result;imgPrev.style.display='block';vidPrev.style.display='none';}
-    else{vidPrev.src=e.target.result;vidPrev.style.display='block';imgPrev.style.display='none';}
-  };
-  reader.readAsDataURL(file);
-}
-
-async function submitCompose() {
-  const text=document.getElementById('composeText').value.trim();
-  const btn=document.getElementById('composeSubmitBtn');
-  if(!text&&!composeFileData){socialToast('Add some text or a photo.');return;}
-  btn.innerHTML='<span class="spinner"></span>'; btn.disabled=true;
-  const body={content:text};
-  if(composeFileData){body.mediaData=composeFileData;body.mediaType=composeFileType;}
-  const d=await sgFetch('/social/post',{method:'POST',body:JSON.stringify(body)}).catch(()=>null);
-  btn.innerHTML='Post'; btn.disabled=false;
-  if(!d?.ok){socialToast(d?.error||'Failed to post.');return;}
-  closeCompose(); socialToast('Posted!'); loadFeed();
-}
-
-function openMydayCompose(){ mydayFileData=null;mydayFileType=null;document.getElementById('mydayCaption').value='';document.getElementById('mydayMediaPreview').style.display='none';document.getElementById('mydayVideoPreview').style.display='none';document.getElementById('mydayFileInput').value='';document.getElementById('mydayCompose').classList.add('open'); }
-function closeMydayCompose(){ document.getElementById('mydayCompose').classList.remove('open'); }
-
-function mydayFileChanged(inp) {
-  const file=inp.files[0]; if(!file) return;
-  mydayFileType=file.type.startsWith('video')?'video':'image';
-  const reader=new FileReader();
-  reader.onload=e=>{
-    mydayFileData=e.target.result.split(',')[1];
-    if(mydayFileType==='image'){const p=document.getElementById('mydayMediaPreview');p.src=e.target.result;p.style.display='block';document.getElementById('mydayVideoPreview').style.display='none';}
-    else{const p=document.getElementById('mydayVideoPreview');p.src=e.target.result;p.style.display='block';document.getElementById('mydayMediaPreview').style.display='none';}
-  };
-  reader.readAsDataURL(file);
-}
-
-async function submitMyday() {
-  if(!mydayFileData){socialToast('Please choose a photo or video.');return;}
-  const btn=document.getElementById('mydaySubmitBtn');
-  btn.innerHTML='<span class="spinner"></span>'; btn.disabled=true;
-  const caption=document.getElementById('mydayCaption').value.trim();
-  const d=await sgFetch('/social/myday',{method:'POST',body:JSON.stringify({mediaData:mydayFileData,mediaType:mydayFileType,caption})}).catch(()=>null);
-  btn.innerHTML='Share'; btn.disabled=false;
-  if(!d?.ok){socialToast(d?.error||'Failed to upload.');return;}
-  closeMydayCompose(); socialToast('Added to your MyDay!'); loadMydayRow();
 }
 
 let socialToastTimer;
@@ -1982,6 +1446,7 @@ function socialToast(msg){
   clearTimeout(socialToastTimer);
   socialToastTimer=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(8px)';},2500);
 }
+
 
 </script>
 </body>
