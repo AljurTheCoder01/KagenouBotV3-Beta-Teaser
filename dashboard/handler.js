@@ -1,7 +1,8 @@
 /*
-* @Notice: don't change anything on this code, or else dashboard will not run properly.
-* @Author: Aljurx
+* @Notice Don't change anything on this code or esle dashboard will not run properly.
+* @Author Aljurx 
 */
+
 
 const path   = require("path");
 const crypto = require("crypto");
@@ -251,11 +252,16 @@ module.exports = function mountDashboard(app) {
   async function serializeAttachment(a) {
     if (!a) return null;
     try {
+      
       if (a && typeof a.then === "function") a = await a;
       if (!a) return null;
+
+      
       const hintMime = typeof a === "object"
         ? (getMimeFromFilename(a.filename) || getMimeFromFilename(a.name) || getMimeFromFilename(a.path) || a.mimetype || a.contentType || a.type || null)
         : null;
+
+      
       if (a && typeof a === "object" && typeof a.pipe === "function") {
         const pathHint = a.path || null;
         const mime = hintMime || getMimeFromFilename(pathHint) || "application/octet-stream";
@@ -263,36 +269,52 @@ module.exports = function mountDashboard(app) {
         const finalMime = hintMime || detectMime(buf);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + buf.toString("base64"), size: buf.length };
       }
+
+      
       if (a && typeof a === "object" && a.stream && typeof a.stream.pipe === "function") {
         const buf = await streamToBuffer(a.stream);
         const finalMime = hintMime || detectMime(buf);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + buf.toString("base64"), size: buf.length };
       }
+
+      
       if (Buffer.isBuffer(a)) {
         const finalMime = hintMime || detectMime(a);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + a.toString("base64"), size: a.length };
       }
+
+      
       if (a instanceof ArrayBuffer || ArrayBuffer.isView(a)) {
         const buf = Buffer.from(a instanceof ArrayBuffer ? a : a.buffer);
         const finalMime = hintMime || detectMime(buf);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + buf.toString("base64"), size: buf.length };
       }
+
+      
       if (typeof a === "string" && !a.startsWith("http") && fs.existsSync(a)) {
         const buf = fs.readFileSync(a);
         const finalMime = getMimeFromFilename(a) || detectMime(buf);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + buf.toString("base64"), size: buf.length };
       }
+
+      
       if (typeof a === "string" && (a.startsWith("http://") || a.startsWith("https://"))) {
         return { kind: "url", url: a };
       }
+
+      
       if (a && typeof a === "object" && a.path) {
         const buf = fs.readFileSync(a.path);
         const finalMime = hintMime || getMimeFromFilename(a.path) || detectMime(buf);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + buf.toString("base64"), size: buf.length };
       }
+
+      
       if (a && typeof a === "object" && a.url) {
         return { kind: "url", url: a.url };
       }
+
+      
       if (a && typeof a === "object" && a.data && Buffer.isBuffer(a.data)) {
         const finalMime = hintMime || detectMime(a.data);
         return { kind: "media", mime: finalMime, dataUrl: "data:" + finalMime + ";base64," + a.data.toString("base64"), size: a.data.length };
@@ -310,6 +332,7 @@ module.exports = function mountDashboard(app) {
     function resolveAttachments(raw) {
       if (!raw) return [];
       if (Array.isArray(raw)) return raw;
+      
       return [raw];
     }
 
@@ -344,6 +367,7 @@ module.exports = function mountDashboard(app) {
 
         if (typeof callback === "function") {
           callback(null, fakeInfo);
+          
           if (global.Kagenou?.replies?.[fakeInfo.messageID]) {
             const registeredReply = global.Kagenou.replies[fakeInfo.messageID];
             if (!global._guestReplyListeners) global._guestReplyListeners = new Map();
@@ -568,9 +592,9 @@ module.exports = function mountDashboard(app) {
     try {
       if (global.trackUsage) global.trackUsage(cmdName);
 
-      // Run command — wrap in a promise that also waits a bit for async callbacks
+      
       await new Promise(async (resolve) => {
-        const timeout = setTimeout(resolve, 8000); // max 8s wait
+        const timeout = setTimeout(resolve, 8000); 
         const done = () => { clearTimeout(timeout); resolve(); };
 
         try {
@@ -589,7 +613,7 @@ module.exports = function mountDashboard(app) {
           responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
         }
 
-        // Wait a bit more for any callback-based responses (exec, setTimeout, etc.)
+        
         setTimeout(done, 500);
       });
 
@@ -752,7 +776,7 @@ module.exports = function mountDashboard(app) {
     }
   });
 
-  // Minimal profile endpoints (no feed/posts/myday/comments)
+  
   function guestAuth(req, res) {
     const session = getGuestSession(req.headers["x-guest-token"]);
     if (!session) { res.status(401).json({ ok: false, error: "Not logged in." }); return null; }
@@ -771,6 +795,7 @@ module.exports = function mountDashboard(app) {
       displayName: doc?.displayName || ("User " + uid.slice(-6)),
       bio:         doc?.bio         || "",
       avatar:      doc?.avatar      || null,
+      birthdate:   doc?.birthdate   || null,
       createdAt:   doc?.createdAt   || null,
     };
   }
@@ -788,11 +813,12 @@ module.exports = function mountDashboard(app) {
   app.patch("/social/profile", async (req, res) => {
     const session = guestAuth(req, res); if (!session) return;
     if (!dbRequired(res)) return;
-    const { displayName, bio, avatar } = req.body || {};
+    const { displayName, bio, avatar, birthdate } = req.body || {};
     const update = {};
     if (displayName !== undefined) update.displayName = String(displayName).slice(0, 40);
     if (bio !== undefined)         update.bio         = String(bio).slice(0, 200);
     if (avatar !== undefined)      update.avatar      = avatar;
+    if (birthdate !== undefined)   update.birthdate   = String(birthdate).slice(0, 20);
     try {
       await global.db.db("guestUsers").updateOne({ uid: session.uid }, { $set: update }, { upsert: true });
       return res.json({ ok: true });
@@ -810,6 +836,137 @@ module.exports = function mountDashboard(app) {
       const profile = await getProfile(q.trim());
       const userRole = getGuestUserRole(q.trim());
       return res.json({ ok: true, profile, userRole });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+  function newId() { return crypto.randomBytes(12).toString('hex'); }
+
+  app.post("/group/create", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { name, members } = req.body || {};
+    if (!name?.trim()) return res.status(400).json({ ok: false, error: "Group name required." });
+    const allMembers = [...new Set([session.uid, ...(members||[]).map(String)])];
+    try {
+      const id = newId();
+      await global.db.db("groups").insertOne({ id, name: name.trim().slice(0,40), ownerUID: session.uid, members: allMembers, createdAt: Date.now() });
+      await global.db.db("groupMessages").insertOne({ groupId: id, role: "bot", senderUID: "bot", body: `Welcome to "${name.trim()}"! You can now run bot commands here.`, attachments: [], ts: Date.now(), id: newId() });
+      return res.json({ ok: true, id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get("/group/list", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const groups = await global.db.db("groups").find({ members: session.uid }).sort({ createdAt: -1 }).toArray();
+      return res.json({ ok: true, groups: groups.map(g => ({ id: g.id, name: g.name, ownerUID: g.ownerUID, memberCount: g.members.length })) });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get("/group/:id/messages", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
+      const messages = await global.db.db("groupMessages").find({ groupId: req.params.id }).sort({ ts: 1 }).limit(100).toArray();
+      const profiles = {};
+      for (const m of messages) {
+        if (m.senderUID && m.senderUID !== 'bot' && !profiles[m.senderUID]) {
+          profiles[m.senderUID] = await getProfile(m.senderUID);
+        }
+      }
+      for (const uid of group.members) {
+        if (!profiles[uid]) profiles[uid] = await getProfile(uid);
+      }
+      return res.json({ ok: true, messages, profiles, memberCount: group.members.length, group });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/group/:id/run", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { input, replyTo } = req.body || {};
+    if (!input?.trim()) return res.status(400).json({ ok: false, error: "input required." });
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
+      const userMsgId = newId();
+      await global.db.db("groupMessages").insertOne({ groupId: req.params.id, id: userMsgId, role: "user", senderUID: session.uid, body: input.trim(), attachments: [], ts: Date.now() });
+      const responseBuffer = [];
+      const groupThreadId = "group_" + req.params.id;
+      const vApi = createVirtualApi(session.uid, responseBuffer);
+      const origSend = vApi.sendMessage.bind(vApi);
+      vApi.sendMessage = async (data, threadID, ...rest) => origSend(data, groupThreadId, ...rest);
+
+      const prefix = global.config?.Prefix?.[0] || "/";
+      const trimmed = input.trim();
+      const body = trimmed.startsWith(prefix) ? trimmed : prefix + trimmed;
+      const parts = body.slice(prefix.length).trim().split(/\s+/);
+      const cmdName = parts[0]?.toLowerCase() || "";
+      const args = parts.slice(1);
+      const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
+
+      if (command) {
+        const userRole = getGuestUserRole(session.uid);
+        const commandRole = command.config?.role ?? command.role ?? 0;
+        if (userRole >= commandRole) {
+          const fakeEvent = { type:"message", threadID: groupThreadId, senderID: String(session.uid), messageID:"vmsg_"+Date.now(), body, attachments:[], timestamp:Date.now(), isGroup:true, messageReply: replyTo ? { messageID: replyTo } : null };
+          await new Promise(async resolve => {
+            const timeout = setTimeout(resolve, 8000);
+            const done = () => { clearTimeout(timeout); resolve(); };
+            try {
+              if (command.execute) { const r = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins||[], global.appState, null, global.usersData, global.globalData); if (r?.then) await r; }
+              else if (command.run) { const r = command.run({ api:vApi, event:fakeEvent, args, attachments:[], usersData:global.usersData, globalData:global.globalData, admins:global.config?.admins||[], prefix, db:global.db, commands:global.commands }); if (r?.then) await r; }
+            } catch(err) { responseBuffer.push({ type:"message", body:"Command error: "+err.message, attachments:[], timestamp:Date.now() }); }
+            setTimeout(done, 500);
+          });
+        } else {
+          responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now() });
+        }
+      } else {
+        responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now() });
+      }
+      for (const r of responseBuffer) {
+        if (r.body?.trim() || r.attachments?.length) {
+          await global.db.db("groupMessages").insertOne({ groupId: req.params.id, id: newId(), role:"bot", senderUID:"bot", body: r.body||"", attachments: r.attachments||[], ts: Date.now() });
+        }
+      }
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/group/:id/members", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { uid } = req.body || {};
+    if (!uid) return res.status(400).json({ ok: false, error: "uid required." });
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (group.ownerUID !== session.uid) return res.status(403).json({ ok: false, error: "Only owner can add members." });
+      const target = await global.db.db("guestUsers").findOne({ uid: String(uid) });
+      if (!target) return res.status(404).json({ ok: false, error: "UID not registered." });
+      if (group.members.includes(String(uid))) return res.status(409).json({ ok: false, error: "Already a member." });
+      await global.db.db("groups").updateOne({ id: req.params.id }, { $push: { members: String(uid) } });
+      const p = await getProfile(String(uid));
+      await global.db.db("groupMessages").insertOne({ groupId: req.params.id, id: newId(), role:"bot", senderUID:"bot", body:`${p.displayName} joined the group.`, attachments:[], ts:Date.now() });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete("/group/:id", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (group.ownerUID !== session.uid) return res.status(403).json({ ok: false, error: "Only owner can delete." });
+      await global.db.db("groups").deleteOne({ id: req.params.id });
+      await global.db.db("groupMessages").deleteMany({ groupId: req.params.id });
+      return res.json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
 
