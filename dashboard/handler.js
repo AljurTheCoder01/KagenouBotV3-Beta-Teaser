@@ -1,3 +1,8 @@
+
+
+
+
+
 const path   = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
@@ -832,7 +837,6 @@ module.exports = function mountDashboard(app) {
       return res.json({ ok: true, profile, userRole });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
-
   function newId() { return crypto.randomBytes(12).toString('hex'); }
 
   app.post("/group/create", async (req, res) => {
@@ -866,8 +870,18 @@ module.exports = function mountDashboard(app) {
       if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
       if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
       const messages = await global.db.db("groupMessages").find({ groupId: req.params.id }).sort({ ts: 1 }).limit(100).toArray();
+      const msgMap = {};
+      messages.forEach(m => { msgMap[m.id] = m; });
+      const enriched = messages.map(m => {
+        if (m.replyTo && msgMap[m.replyTo]) {
+          const target = msgMap[m.replyTo];
+          const targetProfile = target.senderUID === 'bot' ? { displayName: 'KagenouBot' } : null;
+          return { ...m, replyToBody: target.body || '', replyToSender: target.senderUID === 'bot' ? 'KagenouBot' : (target.senderUID || 'User') };
+        }
+        return m;
+      });
       const profiles = {};
-      for (const m of messages) {
+      for (const m of enriched) {
         if (m.senderUID && m.senderUID !== 'bot' && !profiles[m.senderUID]) {
           profiles[m.senderUID] = await getProfile(m.senderUID);
         }
@@ -875,7 +889,7 @@ module.exports = function mountDashboard(app) {
       for (const uid of group.members) {
         if (!profiles[uid]) profiles[uid] = await getProfile(uid);
       }
-      return res.json({ ok: true, messages, profiles, memberCount: group.members.length, group });
+      return res.json({ ok: true, messages: enriched, profiles, memberCount: group.members.length, group });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
 
@@ -892,10 +906,19 @@ module.exports = function mountDashboard(app) {
       const groupThreadId = "group_" + req.params.id;
       const userMsgId = "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
 
+      let replyToBody = undefined, replyToSender = undefined;
+      if (replyTo) {
+        const targetMsg = await global.db.db("groupMessages").findOne({ groupId: req.params.id, id: replyTo });
+        if (targetMsg) {
+          replyToBody = targetMsg.body || '';
+          replyToSender = targetMsg.senderUID === 'bot' ? 'KagenouBot' : (targetMsg.senderUID || 'User');
+        }
+      }
       await global.db.db("groupMessages").insertOne({
         groupId: req.params.id, id: userMsgId,
         role: "user", senderUID: session.uid,
-        body: input.trim(), attachments: [], ts: Date.now()
+        body: input.trim(), attachments: [], ts: Date.now(),
+        replyTo: replyTo || null, replyToBody, replyToSender
       });
       if (replyTo) {
         const targetMsg = await global.db.db("groupMessages").findOne({ groupId: req.params.id, id: replyTo });
@@ -925,6 +948,7 @@ module.exports = function mountDashboard(app) {
           return res.json({ ok: true });
         }
       }
+
       const responseBuffer = [];
       const vApi = createVirtualApi(session.uid, responseBuffer);
       const origSend = vApi.sendMessage.bind(vApi);
@@ -976,7 +1000,6 @@ module.exports = function mountDashboard(app) {
         responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_nf_"+Date.now() });
       }
 
-      // Save bot responses — store vmsgId so replies can be matched later
       for (const r of responseBuffer) {
         if (r.body?.trim() || r.attachments?.length) {
           const botMsgVmsgId = r.messageID || ("vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6));
@@ -987,6 +1010,50 @@ module.exports = function mountDashboard(app) {
           });
         }
       }
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/group/:id/react", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { msgId, reaction } = req.body || {};
+    if (!msgId || !reaction) return res.status(400).json({ ok: false, error: "msgId and reaction required." });
+    const VALID = ["❤️","😂","😮","😢","😡","👍"];
+    if (!VALID.includes(reaction)) return res.status(400).json({ ok: false, error: "Invalid reaction." });
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
+      const msg = await global.db.db("groupMessages").findOne({ id: msgId, groupId: req.params.id });
+      if (!msg) return res.status(404).json({ ok: false, error: "Message not found." });
+      const reactions = msg.reactions || {};
+      if (reactions[session.uid] === reaction) { delete reactions[session.uid]; }
+      else { reactions[session.uid] = reaction; }
+      await global.db.db("groupMessages").updateOne({ id: msgId }, { $set: { reactions } });
+      return res.json({ ok: true, reactions });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/group/:id/media", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { mediaData, mediaType, mime } = req.body || {};
+    if (!mediaData) return res.status(400).json({ ok: false, error: "mediaData required." });
+    if (Buffer.byteLength(mediaData, 'base64') > 10 * 1024 * 1024)
+      return res.status(413).json({ ok: false, error: "File too large. Max 10MB." });
+    try {
+      const group = await global.db.db("groups").findOne({ id: req.params.id });
+      if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
+      if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
+      const finalMime = mime || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg');
+      const dataUrl = `data:${finalMime};base64,${mediaData}`;
+      await global.db.db("groupMessages").insertOne({
+        groupId: req.params.id, id: newId(), vmsgId: "vmsg_media_"+Date.now(),
+        role: "user", senderUID: session.uid, body: "",
+        attachments: [{ kind: "media", mime: finalMime, dataUrl }],
+        ts: Date.now()
+      });
       return res.json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
