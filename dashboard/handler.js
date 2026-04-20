@@ -562,33 +562,17 @@ module.exports = function mountDashboard(app) {
       }
       return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
-
+    
     let command = null;
     let body    = trimmed;
     let cmdName = "";
     let args    = [];
-
-    if (trimmed.startsWith(prefix)) {
-      const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
-      cmdName = parts[0]?.toLowerCase() || "";
-      args    = parts.slice(1);
-      command = global.commands?.get(cmdName);
-      if (!command) {
-        return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
-      }
-    } else {
-  if (global.nonPrefixCommands?.size) {
-    const firstWord = trimmed.toLowerCase().split(/\s+/)[0] || "";
-    const exactCmd = global.nonPrefixCommands.get(firstWord);
-    if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
-      command = exactCmd;
-      cmdName = firstWord;
-      args = trimmed.split(/\s+/).slice(1);
+    
+   const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
+    if (!command) {
+      return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
     }
-  }
-  if (!command) return [];
-}
-
+      
     const userRole    = getGuestUserRole(uid);
     const commandRole = command.config?.role ?? command.role ?? 0;
     if (userRole < commandRole) {
