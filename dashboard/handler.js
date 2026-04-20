@@ -563,18 +563,31 @@ module.exports = function mountDashboard(app) {
       return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
 
-    if (!trimmed.startsWith(prefix)) {
-      return [];
-    }
+    let command = null;
+    let body = trimmed;
+    let cmdName = "";
+    let args = [];
 
-    const body    = trimmed;
-    const parts   = body.slice(prefix.length).trim().split(/\s+/);
-    const cmdName = parts[0]?.toLowerCase() || "";
-    const args    = parts.slice(1);
-
-    const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
-    if (!command) {
-      return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
+    if (trimmed.startsWith(prefix)) {
+      const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
+      cmdName = parts[0]?.toLowerCase() || "";
+      args = parts.slice(1);
+      command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
+      if (!command) {
+        return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
+      }
+    } else {
+      if (global.nonPrefixCommands?.size) {
+        for (const [, cmd] of global.nonPrefixCommands) {
+          if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
+            command = cmd;
+            cmdName = cmd.config?.name || cmd.name || "";
+            args = trimmed.split(/\s+/);
+            break;
+          }
+        }
+      }
+      if (!command) return [];
     }
 
     const userRole    = getGuestUserRole(uid);
@@ -940,6 +953,8 @@ module.exports = function mountDashboard(app) {
           return res.json({ ok: true });
         }
       }
+      const prefix = global.config?.Prefix?.[0] || "/";
+      const trimmed = input.trim();
       const responseBuffer = [];
       const vApi = createVirtualApi(session.uid, responseBuffer);
       const origSend = vApi.sendMessage.bind(vApi);
@@ -948,18 +963,42 @@ module.exports = function mountDashboard(app) {
         return result;
       };
 
-      const prefix = global.config?.Prefix?.[0] || "/";
-      const trimmed = input.trim();
+      let command = null;
+      let body = trimmed;
+      let cmdName = "";
+      let args = [];
 
-      if (!trimmed.startsWith(prefix)) {
-        return res.json({ ok: true });
+      if (trimmed.startsWith(prefix)) {
+        const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
+        cmdName = parts[0]?.toLowerCase() || "";
+        args = parts.slice(1);
+        command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
+        if (!command) {
+          responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_nf_"+Date.now() });
+          for (const r of responseBuffer) {
+            if (r.body?.trim() || r.attachments?.length) {
+              await global.db.db("groupMessages").insertOne({
+                groupId: req.params.id, id: newId(), vmsgId: r.messageID || ("vmsg_" + Date.now()),
+                role: "bot", senderUID: "bot",
+                body: r.body || "", attachments: r.attachments || [], ts: Date.now()
+              });
+            }
+          }
+          return res.json({ ok: true });
+        }
+      } else {
+        if (global.nonPrefixCommands?.size) {
+          for (const [, cmd] of global.nonPrefixCommands) {
+            if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
+              command = cmd;
+              cmdName = cmd.config?.name || cmd.name || "";
+              args = trimmed.split(/\s+/);
+              break;
+            }
+          }
+        }
+        if (!command) return res.json({ ok: true });
       }
-
-      const body = trimmed;
-      const parts = body.slice(prefix.length).trim().split(/\s+/);
-      const cmdName = parts[0]?.toLowerCase() || "";
-      const args = parts.slice(1);
-      const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
 
       if (command) {
         const userRole = getGuestUserRole(session.uid);
@@ -992,8 +1031,6 @@ module.exports = function mountDashboard(app) {
         } else {
           responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_perm_"+Date.now() });
         }
-      } else {
-        responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_nf_"+Date.now() });
       }
       for (const r of responseBuffer) {
         if (r.body?.trim() || r.attachments?.length) {
