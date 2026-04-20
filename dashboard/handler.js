@@ -550,7 +550,7 @@ module.exports = function mountDashboard(app) {
     const trimmed = input.trim();
 
     const responseBuffer = [];
-    const vApi = createVirtualApi(uid, responseBuffer);
+    const vApi           = createVirtualApi(uid, responseBuffer);
 
     if (replyToMessageID) {
       const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
