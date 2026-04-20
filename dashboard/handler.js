@@ -1,8 +1,4 @@
 
-
-
-
-
 const path   = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
@@ -552,10 +548,6 @@ module.exports = function mountDashboard(app) {
   async function runGuestCommand(uid, input, replyToMessageID) {
     const prefix  = (global.config?.Prefix?.[0]) || "/";
     const trimmed = input.trim();
-    const body    = trimmed.startsWith(prefix) ? trimmed : prefix + trimmed;
-    const parts   = body.slice(prefix.length).trim().split(/\s+/);
-    const cmdName = parts[0]?.toLowerCase() || "";
-    const args    = parts.slice(1);
 
     const responseBuffer = [];
     const vApi           = createVirtualApi(uid, responseBuffer);
@@ -570,6 +562,15 @@ module.exports = function mountDashboard(app) {
       }
       return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
+
+    if (!trimmed.startsWith(prefix)) {
+      return [];
+    }
+
+    const body    = trimmed;
+    const parts   = body.slice(prefix.length).trim().split(/\s+/);
+    const cmdName = parts[0]?.toLowerCase() || "";
+    const args    = parts.slice(1);
 
     const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
     if (!command) {
@@ -591,29 +592,21 @@ module.exports = function mountDashboard(app) {
     try {
       if (global.trackUsage) global.trackUsage(cmdName);
 
-      
       await new Promise(async (resolve) => {
-        const timeout = setTimeout(resolve, 8000); 
+        const timeout = setTimeout(resolve, 5000);
         const done = () => { clearTimeout(timeout); resolve(); };
-
         try {
           if (command.execute) {
             const result = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins || [], global.appState, null, global.usersData, global.globalData);
-            if (result && typeof result.then === "function") {
-              await result;
-            }
+            if (result && typeof result.then === "function") await result;
           } else if (command.run) {
             const result = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins || [], prefix, db: global.db, commands: global.commands });
-            if (result && typeof result.then === "function") {
-              await result;
-            }
+            if (result && typeof result.then === "function") await result;
           }
         } catch (err) {
           responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
         }
-
-        
-        setTimeout(done, 500);
+        setTimeout(done, 200);
       });
 
     } catch (err) {
@@ -905,7 +898,6 @@ module.exports = function mountDashboard(app) {
 
       const groupThreadId = "group_" + req.params.id;
       const userMsgId = "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
-
       let replyToBody = undefined, replyToSender = undefined;
       if (replyTo) {
         const targetMsg = await global.db.db("groupMessages").findOne({ groupId: req.params.id, id: replyTo });
@@ -948,7 +940,6 @@ module.exports = function mountDashboard(app) {
           return res.json({ ok: true });
         }
       }
-
       const responseBuffer = [];
       const vApi = createVirtualApi(session.uid, responseBuffer);
       const origSend = vApi.sendMessage.bind(vApi);
@@ -959,7 +950,12 @@ module.exports = function mountDashboard(app) {
 
       const prefix = global.config?.Prefix?.[0] || "/";
       const trimmed = input.trim();
-      const body = trimmed.startsWith(prefix) ? trimmed : prefix + trimmed;
+
+      if (!trimmed.startsWith(prefix)) {
+        return res.json({ ok: true });
+      }
+
+      const body = trimmed;
       const parts = body.slice(prefix.length).trim().split(/\s+/);
       const cmdName = parts[0]?.toLowerCase() || "";
       const args = parts.slice(1);
@@ -978,7 +974,7 @@ module.exports = function mountDashboard(app) {
             messageReply: null,
           };
           await new Promise(async resolve => {
-            const timeout = setTimeout(resolve, 8000);
+            const timeout = setTimeout(resolve, 5000);
             const done = () => { clearTimeout(timeout); resolve(); };
             try {
               if (command.execute) {
@@ -991,7 +987,7 @@ module.exports = function mountDashboard(app) {
             } catch(err) {
               responseBuffer.push({ type:"message", body:"Command error: "+err.message, attachments:[], timestamp:Date.now(), messageID: "vmsg_err_"+Date.now() });
             }
-            setTimeout(done, 500);
+            setTimeout(done, 200);
           });
         } else {
           responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_perm_"+Date.now() });
@@ -999,7 +995,6 @@ module.exports = function mountDashboard(app) {
       } else {
         responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_nf_"+Date.now() });
       }
-
       for (const r of responseBuffer) {
         if (r.body?.trim() || r.attachments?.length) {
           const botMsgVmsgId = r.messageID || ("vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6));
