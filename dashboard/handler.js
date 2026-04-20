@@ -550,7 +550,7 @@ module.exports = function mountDashboard(app) {
     const trimmed = input.trim();
 
     const responseBuffer = [];
-    const vApi           = createVirtualApi(uid, responseBuffer);
+    const vApi = createVirtualApi(uid, responseBuffer);
 
     if (replyToMessageID) {
       const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
@@ -579,11 +579,21 @@ module.exports = function mountDashboard(app) {
     } else {
       if (global.nonPrefixCommands?.size) {
         const firstWord = trimmed.toLowerCase().split(/\s+/)[0] || "";
-        const cmd = global.nonPrefixCommands.get(firstWord);
-        if (cmd && (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
-          command = cmd;
+        const exactCmd = global.nonPrefixCommands.get(firstWord);
+        if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
+          command = exactCmd;
           cmdName = firstWord;
           args = trimmed.split(/\s+/).slice(1);
+        }
+        if (!command) {
+          for (const [name, cmd] of global.nonPrefixCommands) {
+            if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
+              command = cmd;
+              cmdName = name;
+              args = trimmed.split(/\s+/);
+              break;
+            }
+          }
         }
       }
       if (!command) return [];
@@ -967,11 +977,21 @@ module.exports = function mountDashboard(app) {
       } else {
         if (global.nonPrefixCommands?.size) {
           const firstWord = trimmed.toLowerCase().split(/\s+/)[0] || "";
-          const cmd = global.nonPrefixCommands.get(firstWord);
-          if (cmd && (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
-            command = cmd;
+          const exactCmd = global.nonPrefixCommands.get(firstWord);
+          if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
+            command = exactCmd;
             cmdName = firstWord;
             args = trimmed.split(/\s+/).slice(1);
+          }
+          if (!command) {
+            for (const [name, cmd] of global.nonPrefixCommands) {
+              if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
+                command = cmd;
+                cmdName = name;
+                args = trimmed.split(/\s+/);
+                break;
+              }
+            }
           }
         }
         if (!command) return res.json({ ok: true });
