@@ -198,15 +198,14 @@
     .media-upload-btn{width:44px;height:44px;border-radius:50%;background:var(--bg);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative}
     .media-upload-btn svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2}
     .media-upload-btn input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
-    .attach-media{margin-top:6px;border-radius:12px;overflow:hidden;max-width:100%;display:block}
-      .attach-media img{width:100%;max-width:min(400px,85vw);max-height:min(450px,60vh);object-fit:contain;display:block;border-radius:12px;cursor:pointer}
-      .attach-media video{width:100%;max-width:min(400px,85vw);max-height:min(450px,60vh);height:auto;display:block;border-radius:12px;background:#000}
-    .attach-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;max-width:220px;text-decoration:none}
-    .attach-card svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0}
-    .audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:6px;max-width:min(380px,90vw);min-width:260px;box-shadow:var(--shadow)}
-    .audio-card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:6px}
-    .audio-card-label svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;flex-shrink:0}
-    .audio-card audio{width:100%;display:block;border-radius:8px;outline:none}
+    .attach-media{margin-top:6px;border-radius:12px;overflow:hidden;max-width:100%;display:block;width:100%}
+.attach-media img{width:100%;max-width:min(500px,90vw);min-width:280px;max-height:500px;object-fit:contain;display:block;border-radius:12px;cursor:pointer}
+.attach-media video{width:100%;max-width:min(500px,90vw);min-width:280px;max-height:500px;height:auto;display:block;border-radius:12px;background:#000}
+.attach-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;max-width:min(400px,90vw);min-width:260px;text-decoration:none}
+.attach-card svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0}
+.audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-top:6px;display:flex;flex-direction:column;gap:8px;max-width:min(450px,90vw);min-width:280px;width:auto;box-shadow:var(--shadow)}
+.audio-card audio{width:100%;min-width:260px}
+.bubble-wrap.bot{max-width:95%;width:auto;min-width:280px}
     .reaction-btn{font-size:15px;padding:4px 9px;border-radius:99px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:background .12s,transform .1s;line-height:1.4;display:flex;align-items:center;gap:3px;font-family:inherit;min-height:32px;-webkit-tap-highlight-color:transparent}
     .reaction-btn:active{transform:scale(.88)}
     .reaction-btn.reacted{background:var(--accent);border-color:var(--accent);color:#fff}
