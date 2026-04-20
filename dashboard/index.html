@@ -17,10 +17,22 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="google" content="notranslate">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta http-equiv="X-Frame-Options" content="DENY">
   <title>Shadow Garden</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
+      @import "@timwickstrom/kinesis/tailwind";
     
+      .bubble {
+        transition: transform 0.3s var(--ease-spring-gentle);
+      }
+      .bubble:active {
+        transition-timing-function: var(--ease-haptic-click);
+      }
+      
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#f4f4f2;--surface:#fff;--border:#e6e6e3;--text:#181818;--muted:#888882;
@@ -186,12 +198,12 @@
     .media-upload-btn{width:44px;height:44px;border-radius:50%;background:var(--bg);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative}
     .media-upload-btn svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2}
     .media-upload-btn input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
-    .attach-media{margin-top:6px;border-radius:12px;overflow:hidden;max-width:220px;display:block}
-    .attach-media img{width:100%;max-width:220px;max-height:180px;object-fit:cover;display:block;border-radius:12px}
-    .attach-media video{width:100%;max-width:220px;max-height:160px;height:auto;display:block;border-radius:12px;background:#000}
+    .attach-media{margin-top:6px;border-radius:12px;overflow:hidden;max-width:100%;display:block}
+      .attach-media img{width:100%;max-width:min(400px,85vw);max-height:min(450px,60vh);object-fit:contain;display:block;border-radius:12px;cursor:pointer}
+      .attach-media video{width:100%;max-width:min(400px,85vw);max-height:min(450px,60vh);height:auto;display:block;border-radius:12px;background:#000}
     .attach-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;max-width:220px;text-decoration:none}
     .attach-card svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0}
-    .audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:6px;max-width:240px;box-shadow:var(--shadow)}
+    .audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:6px;max-width:min(380px,90vw);min-width:260px;box-shadow:var(--shadow)}
     .audio-card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:6px}
     .audio-card-label svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;flex-shrink:0}
     .audio-card audio{width:100%;display:block;border-radius:8px;outline:none}
@@ -729,9 +741,19 @@
     </div>
   </div>
 </div>
-
+<script
+    disable-devtool-auto
+    src='https://cdn.jsdelivr.net/npm/disable-devtool'
+    disable-menu='true'
+    detectors='xxx'
+    clear-log='true'
+    disable-select='true'
+    disable-copy='true'
+    disable-cut='true'
+    disable-paste='true'
+></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
-
 const PAGE = (() => {
   const p = window.location.pathname;
   if (p === '/guest' || p === '/guest/') return 'guest';
@@ -1158,33 +1180,16 @@ function showGuestApp(uid) {
   document.getElementById('guestSubtitle').textContent = `Guest • UID: ${uid}`;
   history.replaceState(null,'','/guest');
   guestLoadCommands();
-  setTimeout(() => checkBirthday(), 1000);
-}
-
-async function checkBirthday() {
-  const d = await sgFetch('/social/profile/me').catch(()=>null);
-  if (!d?.ok || !d.profile?.birthdate) return;
-  const today = new Date();
-  const bday = new Date(d.profile.birthdate);
-  if (isNaN(bday)) return;
-  if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) {
-    const name = d.profile.displayName || 'there';
-    setTimeout(() => {
-      alert(`🥳🎂🎉 Happy Birthday, ${name}!\n\nWishing you an amazing day filled with joy and celebrations! 🎊`);
-    }, 500);
-  }
 }
 
 const ROLE_LABELS = ['User','Admin','Moderator','VIP','Developer'];
 const ROLE_COLORS = ['','#d97706','#2563eb','#7c3aed','#16a34a'];
 let guestAllCmds = [];
-let guestPrefix = '/';
 
 async function guestLoadCommands() {
   const res = await fetch('/guest/commands', { headers:{'x-guest-token':GUEST_TOKEN} })
-    .then(r=>r.json()).catch(()=>({ok:false,commands:[],userRole:0,prefix:'/'}));
+    .then(r=>r.json()).catch(()=>({ok:false,commands:[],userRole:0}));
   guestAllCmds = res.commands || [];
-  guestPrefix = res.prefix || '/';
   const roleLabel = ROLE_LABELS[res.userRole??0] || 'User';
   document.getElementById('guestSubtitle').textContent = `${roleLabel} • UID: ${SESSION_UID}`;
   renderGuestCmds(guestAllCmds);
@@ -1299,38 +1304,37 @@ async function sendCommand() {
   if (guestIsRunning) return;
   const input = document.getElementById('cmdInput').value.trim();
   if (!input) return;
-
   guestIsRunning = true;
   document.getElementById('sendBtn').disabled = true;
   document.getElementById('cmdInput').value = '';
   guestAutoResize.call(document.getElementById('cmdInput'));
   document.getElementById('welcomeMsg')?.remove();
 
-  const replyCtx = guestReplyContext;
-  appendGuestBubble('user', input, [], null, replyCtx ? replyCtx.previewText : null);
-  cancelReply();
-
   const payload = { input };
-  if (replyCtx) {
-    payload.replyTo = replyCtx.messageId;
-    payload.replyPreview = replyCtx.previewText;
+  if (guestReplyContext) {
+    payload.replyTo = guestReplyContext.messageId;
+    payload.replyPreview = guestReplyContext.previewText;
   }
+
+  appendGuestBubble('user', input, [], null, guestReplyContext ? guestReplyContext.previewText : null);
+  cancelReply();
 
   const typingEl = appendGuestTyping();
   try {
     const res = await fetch('/guest/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-guest-token': GUEST_TOKEN },
-      body: JSON.stringify(payload)
-    }).then(r => r.json());
-    typingEl?.remove();
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-guest-token':GUEST_TOKEN},
+      body:JSON.stringify(payload)
+    }).then(r=>r.json());
+    typingEl.remove();
     if (!res.ok && res.error?.includes('Session')) { clearGuestSession(); guestLogout(); return; }
-    if (!res.ok) { appendGuestBubble('bot', `⚠️ ${res.error || 'Something went wrong.'}`); return; }
+    if (!res.ok) { appendGuestBubble('bot', `⚠️ ${res.error||'Something went wrong.'}`); return; }
     for (const entry of res.responses || []) {
-      appendGuestBubble('bot', entry.body || '', entry.attachments || [], entry.messageID || null);
+      appendGuestBubble('bot', entry.body||'', entry.attachments||[], entry.messageID || null);
+      await sleep(120);
     }
-  } catch (e) {
-    typingEl?.remove();
+  } catch {
+    typingEl.remove();
     appendGuestBubble('bot', '⚠️ Could not reach the server.');
   } finally {
     guestIsRunning = false;
@@ -1529,15 +1533,12 @@ function closeReactionPopup() {
 }
 
 async function addGroupReaction(emoji) {
-  const msgId = reactionTargetMsgId;
-  const groupId = reactionGroupId;
   closeReactionPopup();
-  if (!msgId || !groupId) return;
-  await sgFetch('/group/'+groupId+'/react', {
+  if (!reactionTargetMsgId || !reactionGroupId) return;
+  await sgFetch('/group/'+reactionGroupId+'/react', {
     method: 'POST',
-    body: JSON.stringify({ msgId, reaction: emoji })
+    body: JSON.stringify({ msgId: reactionTargetMsgId, reaction: emoji })
   }).catch(()=>null);
-  groupLastMsgCount = 0;
   refreshGroupChat();
 }
 
@@ -1662,7 +1663,7 @@ async function loadMyProfile() {
       <div style="height:160px;background:linear-gradient(145deg,var(--accent),${role>0?roleColor+'99':'#a78bfa99'});position:relative;flex-shrink:0"></div>
       <div style="background:var(--surface);flex:1;border-radius:0 0 0 0;padding-bottom:40px">
         <div style="display:flex;flex-direction:column;align-items:center;padding:0 20px;text-align:center">
-          <div style="width:120px;height:120px;border-radius:50%;background:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;border:5px solid var(--surface);margin-top:-60px;position:relative;z-index:1;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0">${avatarHtml}</div>
+          <div style="width:120px;height:120px;border-radius:50%;background:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;border:5px solid var(--surface);margin-top:-60px;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0">${avatarHtml}</div>
           <div style="margin-top:14px;width:100%">
             <div style="font-size:24px;font-weight:700;letter-spacing:-.4px">${escHtml(p.displayName)}</div>
             <div style="font-size:12px;color:var(--muted);font-family:monospace;margin-top:5px;letter-spacing:.02em">UID: ${escHtml(p.uid)}</div>
@@ -1971,8 +1972,7 @@ function renderGroupMessage(msg, profiles) {
       const pill = document.createElement('button');
       pill.className = 'msg-reaction-pill' + (myReaction===emoji?' mine':'');
       pill.innerHTML = `${emoji}<span>${count}</span>`;
-      const _msgId = msg.id, _groupId = currentGroupId, _emoji = emoji;
-      pill.onclick = () => { reactionTargetMsgId=_msgId; reactionGroupId=_groupId; addGroupReaction(_emoji); };
+      pill.onclick = () => { reactionTargetMsgId=msg.id; reactionGroupId=currentGroupId; addGroupReaction(emoji); };
       rxBar.appendChild(pill);
     });
     wrap.appendChild(rxBar);
@@ -2008,14 +2008,12 @@ async function sendGroupCommand() {
   const replyTo = groupReplyToId;
   inp.value = ''; inp.style.height = 'auto';
   cancelGroupReply();
-
   const tempMsg = { id: 'temp_'+Date.now(), role:'user', senderUID: SESSION_UID, body: input, attachments:[], ts: Date.now() };
   renderGroupMessage(tempMsg, {});
   const area = document.getElementById('groupChatArea');
   area.scrollTop = area.scrollHeight;
-
   sgFetch('/group/'+currentGroupId+'/run', { method:'POST', body:JSON.stringify({ input, replyTo }) })
-    .then(() => { groupLastMsgCount = 0; setTimeout(refreshGroupChat, 600); })
+    .then(() => { groupLastMsgCount = 0; refreshGroupChat(); })
     .catch(() => {});
 }
 
@@ -2056,7 +2054,6 @@ async function deleteGroup() {
   if (!d?.ok) { socialToast(d?.error||'Failed to delete.'); return; }
   closeGroupInfo(); leaveGroupChat(); socialToast('Group deleted.');
 }
-
 </script>
 </body>
 </html>
