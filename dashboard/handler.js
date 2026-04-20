@@ -564,14 +564,14 @@ module.exports = function mountDashboard(app) {
     }
 
     let command = null;
-    let body = trimmed;
+    let body    = trimmed;
     let cmdName = "";
-    let args = [];
+    let args    = [];
 
     if (trimmed.startsWith(prefix)) {
       const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
       cmdName = parts[0]?.toLowerCase() || "";
-      args = parts.slice(1);
+      args    = parts.slice(1);
       command = global.commands?.get(cmdName);
       if (!command) {
         return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
@@ -583,14 +583,14 @@ module.exports = function mountDashboard(app) {
         if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true) && !global.commands?.has(firstWord)) {
           command = exactCmd;
           cmdName = firstWord;
-          args = trimmed.split(/\s+/).slice(1);
+          args    = trimmed.split(/\s+/).slice(1);
         }
         if (!command) {
           for (const [name, cmd] of global.nonPrefixCommands) {
             if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
               command = cmd;
               cmdName = name;
-              args = trimmed.split(/\s+/);
+              args    = trimmed.split(/\s+/);
               break;
             }
           }
@@ -614,19 +614,32 @@ module.exports = function mountDashboard(app) {
     try {
       if (global.trackUsage) global.trackUsage(cmdName);
 
-      if (command.execute) {
-        const result = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins || [], global.appState, null, global.usersData, global.globalData);
-        if (result && typeof result.then === "function") await result;
-      } else if (command.run) {
-        const result = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins || [], prefix, db: global.db, commands: global.commands });
-        if (result && typeof result.then === "function") await result;
-      }
+      await new Promise(async (resolve) => {
+        const timeout = setTimeout(resolve, 8000);
+        const done = () => { clearTimeout(timeout); resolve(); };
+        try {
+          if (command.execute) {
+            const result = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins || [], global.appState, null, global.usersData, global.globalData);
+            if (result && typeof result.then === "function") await result;
+          } else if (command.run) {
+            const result = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins || [], prefix, db: global.db, commands: global.commands });
+            if (result && typeof result.then === "function") await result;
+          }
+        } catch (err) {
+          responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
+        }
+        setTimeout(done, 500);
+      });
     } catch (err) {
       responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
     }
 
+    if (!responseBuffer.length) {
+      responseBuffer.push({ type: "message", body: "(Command ran but produced no output.)", attachments: [], timestamp: Date.now() });
+    }
     return responseBuffer;
   }
+
 
   const GUEST_COLLECTION = "guestUsers";
   const guestAccounts = new Map();
