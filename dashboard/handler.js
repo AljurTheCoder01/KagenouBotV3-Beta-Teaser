@@ -806,9 +806,14 @@ module.exports = function mountDashboard(app) {
     return true;
   }
 
+  const profileCache = new Map();
+  const PROFILE_CACHE_TTL = 60000;
+
   async function getProfile(uid) {
+    const cached = profileCache.get(uid);
+    if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) return cached.data;
     const doc = global.db ? await global.db.db("guestUsers").findOne({ uid }) : null;
-    return {
+    const data = {
       uid,
       displayName: doc?.displayName || ("User " + uid.slice(-6)),
       bio:         doc?.bio         || "",
@@ -816,8 +821,46 @@ module.exports = function mountDashboard(app) {
       birthdate:   doc?.birthdate   || null,
       createdAt:   doc?.createdAt   || null,
     };
+    profileCache.set(uid, { data, ts: Date.now() });
+    return data;
   }
 
+  async function getProfilesBatch(uids) {
+    const result = {};
+    const toFetch = [];
+    for (const uid of uids) {
+      const cached = profileCache.get(uid);
+      if (cached && Date.now() - cached.ts < PROFILE_CACHE_TTL) {
+        result[uid] = cached.data;
+      } else {
+        toFetch.push(uid);
+      }
+    }
+    if (toFetch.length && global.db) {
+      const docs = await global.db.db("guestUsers").find({ uid: { $in: toFetch } }).toArray();
+      const docMap = {};
+      docs.forEach(d => { docMap[d.uid] = d; });
+      for (const uid of toFetch) {
+        const doc = docMap[uid] || null;
+        const data = {
+          uid,
+          displayName: doc?.displayName || ("User " + uid.slice(-6)),
+          bio:         doc?.bio         || "",
+          avatar:      doc?.avatar      || null,
+          birthdate:   doc?.birthdate   || null,
+          createdAt:   doc?.createdAt   || null,
+        };
+        profileCache.set(uid, { data, ts: Date.now() });
+        result[uid] = data;
+      }
+    } else {
+      for (const uid of toFetch) {
+        const data = { uid, displayName: "User " + uid.slice(-6), bio: "", avatar: null, birthdate: null, createdAt: null };
+        result[uid] = data;
+      }
+    }
+    return result;
+  }
   app.get("/social/profile/me", async (req, res) => {
     const session = guestAuth(req, res); if (!session) return;
     if (!dbRequired(res)) return;
@@ -899,15 +942,9 @@ module.exports = function mountDashboard(app) {
         }
         return m;
       });
-      const profiles = {};
-      for (const m of enriched) {
-        if (m.senderUID && m.senderUID !== 'bot' && !profiles[m.senderUID]) {
-          profiles[m.senderUID] = await getProfile(m.senderUID);
-        }
-      }
-      for (const uid of group.members) {
-        if (!profiles[uid]) profiles[uid] = await getProfile(uid);
-      }
+      const uidsToFetch = new Set(group.members);
+      enriched.forEach(m => { if (m.senderUID && m.senderUID !== 'bot') uidsToFetch.add(m.senderUID); });
+      const profiles = await getProfilesBatch([...uidsToFetch]);
       return res.json({ ok: true, messages: enriched, profiles, memberCount: group.members.length, group });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
@@ -1042,6 +1079,7 @@ module.exports = function mountDashboard(app) {
       } else {
         responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_perm_"+Date.now() });
       }
+      const botResponses = [];
       for (const r of responseBuffer) {
         if (r.body?.trim() || r.attachments?.length) {
           const botMsgVmsgId = r.messageID || ("vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6));
@@ -1050,9 +1088,10 @@ module.exports = function mountDashboard(app) {
             role: "bot", senderUID: "bot",
             body: r.body || "", attachments: r.attachments || [], ts: Date.now()
           });
+          botResponses.push({ body: r.body || "", attachments: r.attachments || [] });
         }
       }
-      return res.json({ ok: true });
+      return res.json({ ok: true, responses: botResponses });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
 
