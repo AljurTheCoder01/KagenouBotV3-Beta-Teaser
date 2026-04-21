@@ -1664,7 +1664,7 @@ async function loadMyProfile() {
       <div style="height:160px;background:linear-gradient(145deg,var(--accent),${role>0?roleColor+'99':'#a78bfa99'});position:relative;flex-shrink:0"></div>
       <div style="background:var(--surface);flex:1;border-radius:0 0 0 0;padding-bottom:40px">
         <div style="display:flex;flex-direction:column;align-items:center;padding:0 20px;text-align:center">
-          <div style="width:120px;height:120px;border-radius:50%;background:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;border:5px solid var(--surface);margin-top:-60px;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0">${avatarHtml}</div>
+          <div style="width:120px;height:120px;border-radius:50%;background:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;border:5px solid var(--surface);margin-top:-60px;position:relative;z-index:1;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0">${avatarHtml}</div>
           <div style="margin-top:14px;width:100%">
             <div style="font-size:24px;font-weight:700;letter-spacing:-.4px">${escHtml(p.displayName)}</div>
             <div style="font-size:12px;color:var(--muted);font-family:monospace;margin-top:5px;letter-spacing:.02em">UID: ${escHtml(p.uid)}</div>
