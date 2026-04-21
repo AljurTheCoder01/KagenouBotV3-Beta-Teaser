@@ -24,15 +24,13 @@
   <title>Shadow Garden</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
-      @import "@timwickstrom/kinesis/tailwind";
-    
+      @import "@timwickstrom/kinesis/tailwind";   
       .bubble {
         transition: transform 0.3s var(--ease-spring-gentle);
       }
       .bubble:active {
         transition-timing-function: var(--ease-haptic-click);
-      }
-      
+      }  
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#f4f4f2;--surface:#fff;--border:#e6e6e3;--text:#181818;--muted:#888882;
@@ -2014,7 +2012,18 @@ async function sendGroupCommand() {
   const area = document.getElementById('groupChatArea');
   area.scrollTop = area.scrollHeight;
   sgFetch('/group/'+currentGroupId+'/run', { method:'POST', body:JSON.stringify({ input, replyTo }) })
-    .then(() => { groupLastMsgCount = 0; refreshGroupChat(); })
+    .then(d => {
+      if (d?.responses?.length) {
+        for (const r of d.responses) {
+          renderGroupMessage({ id:'bot_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), role:'bot', senderUID:'bot', body:r.body||'', attachments:r.attachments||[], ts:Date.now() }, {});
+        }
+        const a = document.getElementById('groupChatArea');
+        a.scrollTop = a.scrollHeight;
+        groupLastMsgCount = 0;
+      } else {
+        groupLastMsgCount = 0; refreshGroupChat();
+      }
+    })
     .catch(() => {});
 }
 
