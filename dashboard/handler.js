@@ -1,4 +1,8 @@
 
+
+
+
+
 const path   = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
@@ -546,104 +550,78 @@ module.exports = function mountDashboard(app) {
   }
 
   async function runGuestCommand(uid, input, replyToMessageID) {
-  const prefix  = (global.config?.Prefix?.[0]) || "/";
-  const trimmed = input.trim();
+    const prefix  = (global.config?.Prefix?.[0]) || "/";
+    const trimmed = input.trim();
 
-  const responseBuffer = [];
-  const vApi           = createVirtualApi(uid, responseBuffer);
+    const responseBuffer = [];
+    const vApi           = createVirtualApi(uid, responseBuffer);
 
-  if (replyToMessageID) {
-    const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
-    if (handled) {
-      if (!responseBuffer.length) {
-        responseBuffer.push({ type: "message", body: "(Reply processed.)", attachments: [], timestamp: Date.now() });
+    if (replyToMessageID) {
+      const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
+      if (handled) {
+        if (!responseBuffer.length) {
+          responseBuffer.push({ type: "message", body: "(Reply processed.)", attachments: [], timestamp: Date.now() });
+        }
+        return responseBuffer;
       }
-      return responseBuffer;
+      return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
-    return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
-  }
-  
-  let command = null;
-  let body    = trimmed;
-  let cmdName = "";
-  let args    = [];
 
-  if (trimmed.startsWith(prefix)) {
-    const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
-    cmdName = parts[0]?.toLowerCase() || "";
-    args = parts.slice(1);
-    command = global.commands?.get(cmdName);
-    
+    if (!trimmed.startsWith(prefix)) {
+      return [];
+    }
+
+    const body    = trimmed;
+    const parts   = body.slice(prefix.length).trim().split(/\s+/);
+    const cmdName = parts[0]?.toLowerCase() || "";
+    const args    = parts.slice(1);
+
+    const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
     if (!command) {
       return [{ type: "message", body: `Command "${cmdName}" not found. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
     }
-  } else {
-    const firstWord = trimmed.toLowerCase().split(/\s+/)[0] || "";
-    const exactCmd = global.nonPrefixCommands?.get(firstWord);
-    if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true)) {
-      command = exactCmd;
-      cmdName = firstWord;
-      args = trimmed.split(/\s+/).slice(1);
-    } else {
-      for (const [name, cmd] of global.nonPrefixCommands || []) {
-        if (cmd.config?.nonPrefix === true || cmd.nonPrefix === true) {
-          if (trimmed.toLowerCase().startsWith(name.toLowerCase())) {
-            command = cmd;
-            cmdName = name;
-            const remaining = trimmed.slice(name.length).trim();
-            args = remaining ? remaining.split(/\s+/) : [];
-            break;
+
+    const userRole    = getGuestUserRole(uid);
+    const commandRole = command.config?.role ?? command.role ?? 0;
+    if (userRole < commandRole) {
+      return [{ type: "message", body: `Permission denied. Requires role ${commandRole}, your role is ${userRole}.`, attachments: [], timestamp: Date.now() }];
+    }
+
+    const fakeEvent = {
+      type: "message", threadID: "guest_" + uid, senderID: String(uid),
+      messageID: "vmsg_" + Date.now(), body, attachments: [], timestamp: Date.now(),
+      isGroup: false, messageReply: null,
+    };
+
+    try {
+      if (global.trackUsage) global.trackUsage(cmdName);
+
+      await new Promise(async (resolve) => {
+        const timeout = setTimeout(resolve, 5000);
+        const done = () => { clearTimeout(timeout); resolve(); };
+        try {
+          if (command.execute) {
+            const result = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins || [], global.appState, null, global.usersData, global.globalData);
+            if (result && typeof result.then === "function") await result;
+          } else if (command.run) {
+            const result = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins || [], prefix, db: global.db, commands: global.commands });
+            if (result && typeof result.then === "function") await result;
           }
+        } catch (err) {
+          responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
         }
-      }
+        setTimeout(done, 200);
+      });
+
+    } catch (err) {
+      responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
     }
-    
-    if (!command) {
-      return [{ type: "message", body: `Command not recognized. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
+
+    if (!responseBuffer.length) {
+      responseBuffer.push({ type: "message", body: "(Command ran but produced no output.)", attachments: [], timestamp: Date.now() });
     }
+    return responseBuffer;
   }
-    
-  const userRole    = getGuestUserRole(uid);
-  const commandRole = command.config?.role ?? command.role ?? 0;
-  if (userRole < commandRole) {
-    return [{ type: "message", body: `Permission denied. Requires role ${commandRole}, your role is ${userRole}.`, attachments: [], timestamp: Date.now() }];
-  }
-
-  const fakeEvent = {
-    type: "message", threadID: "guest_" + uid, senderID: String(uid),
-    messageID: "vmsg_" + Date.now(), body, attachments: [], timestamp: Date.now(),
-    isGroup: false, messageReply: null,
-  };
-
-  try {
-    if (global.trackUsage) global.trackUsage(cmdName);
-
-    await new Promise(async (resolve) => {
-      const timeout = setTimeout(resolve, 8000);
-      const done = () => { clearTimeout(timeout); resolve(); };
-      try {
-        if (command.execute) {
-          const result = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins || [], global.appState, null, global.usersData, global.globalData);
-          if (result && typeof result.then === "function") await result;
-        } else if (command.run) {
-          const result = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins || [], prefix, db: global.db, commands: global.commands });
-          if (result && typeof result.then === "function") await result;
-        }
-      } catch (err) {
-        responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
-      }
-      setTimeout(done, 500);
-    });
-  } catch (err) {
-    responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
-  }
-
-  if (!responseBuffer.length) {
-    responseBuffer.push({ type: "message", body: "(Command ran but produced no output.)", attachments: [], timestamp: Date.now() });
-  }
-  return responseBuffer;
-}
-
 
   const GUEST_COLLECTION = "guestUsers";
   const guestAccounts = new Map();
@@ -849,13 +827,70 @@ module.exports = function mountDashboard(app) {
     const { q } = req.query;
     if (!q?.trim()) return res.status(400).json({ ok: false, error: "Query required." });
     try {
-      const doc = await global.db.db("guestUsers").findOne({ uid: q.trim() });
+      const trimmed = q.trim();
+      let doc = await global.db.db("guestUsers").findOne({ uid: trimmed });
+      if (!doc) {
+        doc = await global.db.db("guestUsers").findOne({ displayName: { $regex: new RegExp("^" + trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") } });
+      }
       if (!doc) return res.json({ ok: false, error: "User not found." });
-      const profile = await getProfile(q.trim());
-      const userRole = getGuestUserRole(q.trim());
+      const profile = await getProfile(doc.uid);
+      const userRole = getGuestUserRole(doc.uid);
       return res.json({ ok: true, profile, userRole });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
+
+  app.get("/social/profile/:uid", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const profile = await getProfile(req.params.uid);
+      const userRole = getGuestUserRole(req.params.uid);
+      const collections = await global.db.db("collections").find({ uid: req.params.uid }).sort({ createdAt: -1 }).toArray();
+      return res.json({ ok: true, profile, userRole, collections, isSelf: session.uid === req.params.uid });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get("/social/collection", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const items = await global.db.db("collections").find({ uid: session.uid }).sort({ createdAt: -1 }).toArray();
+      return res.json({ ok: true, items });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/social/collection", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    const { mediaData, mediaType, mime, caption } = req.body || {};
+    if (!mediaData) return res.status(400).json({ ok: false, error: "mediaData required." });
+    if (!["image","video"].includes(mediaType)) return res.status(400).json({ ok: false, error: "mediaType must be image or video." });
+    if (Buffer.byteLength(mediaData, "base64") > 10 * 1024 * 1024) return res.status(413).json({ ok: false, error: "File too large. Max 10MB." });
+    try {
+      const id = newId();
+      const finalMime = mime || (mediaType === "video" ? "video/mp4" : "image/jpeg");
+      const dataUrl = `data:${finalMime};base64,${mediaData}`;
+      await global.db.db("collections").insertOne({
+        id, uid: session.uid, mediaType, mime: finalMime, dataUrl,
+        caption: (caption || "").slice(0, 300),
+        createdAt: Date.now()
+      });
+      return res.json({ ok: true, id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.delete("/social/collection/:id", async (req, res) => {
+    const session = guestAuth(req, res); if (!session) return;
+    if (!dbRequired(res)) return;
+    try {
+      const item = await global.db.db("collections").findOne({ id: req.params.id });
+      if (!item) return res.status(404).json({ ok: false, error: "Not found." });
+      if (item.uid !== session.uid) return res.status(403).json({ ok: false, error: "Not yours." });
+      await global.db.db("collections").deleteOne({ id: req.params.id });
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
   function newId() { return crypto.randomBytes(12).toString('hex'); }
 
   app.post("/group/create", async (req, res) => {
@@ -867,6 +902,7 @@ module.exports = function mountDashboard(app) {
     try {
       const id = newId();
       await global.db.db("groups").insertOne({ id, name: name.trim().slice(0,40), ownerUID: session.uid, members: allMembers, createdAt: Date.now() });
+      // Init message log
       await global.db.db("groupMessages").insertOne({ groupId: id, role: "bot", senderUID: "bot", body: `Welcome to "${name.trim()}"! You can now run bot commands here.`, attachments: [], ts: Date.now(), id: newId() });
       return res.json({ ok: true, id });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
@@ -889,6 +925,7 @@ module.exports = function mountDashboard(app) {
       if (!group) return res.status(404).json({ ok: false, error: "Group not found." });
       if (!group.members.includes(session.uid)) return res.status(403).json({ ok: false, error: "Not a member." });
       const messages = await global.db.db("groupMessages").find({ groupId: req.params.id }).sort({ ts: 1 }).limit(100).toArray();
+      // Populate replyTo context
       const msgMap = {};
       messages.forEach(m => { msgMap[m.id] = m; });
       const enriched = messages.map(m => {
@@ -924,6 +961,8 @@ module.exports = function mountDashboard(app) {
 
       const groupThreadId = "group_" + req.params.id;
       const userMsgId = "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+
+      // Build replyTo context for display
       let replyToBody = undefined, replyToSender = undefined;
       if (replyTo) {
         const targetMsg = await global.db.db("groupMessages").findOne({ groupId: req.params.id, id: replyTo });
@@ -932,13 +971,18 @@ module.exports = function mountDashboard(app) {
           replyToSender = targetMsg.senderUID === 'bot' ? 'KagenouBot' : (targetMsg.senderUID || 'User');
         }
       }
+
+      // Save user message immediately
       await global.db.db("groupMessages").insertOne({
         groupId: req.params.id, id: userMsgId,
         role: "user", senderUID: session.uid,
         body: input.trim(), attachments: [], ts: Date.now(),
         replyTo: replyTo || null, replyToBody, replyToSender
       });
+
+      // Check if this is a reply to a bot message
       if (replyTo) {
+        // Find the vmsg messageID stored for this db message id
         const targetMsg = await global.db.db("groupMessages").findOne({ groupId: req.params.id, id: replyTo });
         const targetMsgId = targetMsg?.vmsgId || replyTo;
 
@@ -966,82 +1010,67 @@ module.exports = function mountDashboard(app) {
           return res.json({ ok: true });
         }
       }
-      const prefix = global.config?.Prefix?.[0] || "/";
-        const trimmed = input.trim();
-        
-        const responseBuffer = [];
-        const vApi = createVirtualApi(session.uid, responseBuffer);
-        
-        let command = null;
-        let body = trimmed;
-        let cmdName = "";
-        let args = [];
-        
-        if (trimmed.startsWith(prefix)) {
-          const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
-          cmdName = parts[0]?.toLowerCase() || "";
-          args = parts.slice(1);
-          command = global.commands?.get(cmdName);
-          if (!command) {
-            await global.db.db("groupMessages").insertOne({
-              groupId: req.params.id, id: newId(), vmsgId: "vmsg_nf_" + Date.now(),
-              role: "bot", senderUID: "bot",
-              body: `Command "${cmdName}" not found. Use ${prefix}help.`,
-              attachments: [], ts: Date.now()
-            });
-            return res.json({ ok: true });
-          }
-        } else {
-          const firstWord = trimmed.toLowerCase().split(/\s+/)[0] || "";
-          const exactCmd = global.nonPrefixCommands?.get(firstWord);
-          if (exactCmd && (exactCmd.config?.nonPrefix === true || exactCmd.nonPrefix === true)) {
-            command = exactCmd;
-            cmdName = firstWord;
-            args = trimmed.split(/\s+/).slice(1);
-          } else {
-            let found = false;
-            for (const [name, cmd] of global.nonPrefixCommands || []) {
-              if ((cmd.config?.nonPrefix === true || cmd.nonPrefix === true) && 
-                  trimmed.toLowerCase().startsWith(name.toLowerCase())) {
-                command = cmd;
-                cmdName = name;
-                const remaining = trimmed.slice(name.length).trim();
-                args = remaining ? remaining.split(/\s+/) : [];
-                found = true;
-                break;
-              }
-            }
-            if (!found) {
-              return res.json({ ok: true });
-            }
-          }
-        }
 
-      const userRole = getGuestUserRole(session.uid);
-      const commandRole = command.config?.role ?? command.role ?? 0;
-      if (userRole >= commandRole) {
-        const fakeEvent = {
-          type: "message", threadID: groupThreadId,
-          senderID: String(session.uid),
-          messageID: userMsgId,
-          body, attachments: [], timestamp: Date.now(),
-          isGroup: true,
-          messageReply: null,
-        };
-        try {
-          if (command.execute) {
-            const r = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins||[], global.appState, null, global.usersData, global.globalData);
-            if (r?.then) await r;
-          } else if (command.run) {
-            const r = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins||[], prefix, db: global.db, commands: global.commands });
-            if (r?.then) await r;
-          }
-        } catch(err) {
-          responseBuffer.push({ type:"message", body:"Command error: "+err.message, attachments:[], timestamp:Date.now(), messageID:"vmsg_err_"+Date.now() });
+      // Run as command
+      const responseBuffer = [];
+      const vApi = createVirtualApi(session.uid, responseBuffer);
+
+      // Intercept sendMessage to capture reply listeners with vmsgId
+      const origSend = vApi.sendMessage.bind(vApi);
+      vApi.sendMessage = async (data, threadID, arg3, arg4) => {
+        const result = await origSend(data, groupThreadId, arg3, arg4);
+        return result;
+      };
+
+      const prefix = global.config?.Prefix?.[0] || "/";
+      const trimmed = input.trim();
+
+      if (!trimmed.startsWith(prefix)) {
+        return res.json({ ok: true });
+      }
+
+      const body = trimmed;
+      const parts = body.slice(prefix.length).trim().split(/\s+/);
+      const cmdName = parts[0]?.toLowerCase() || "";
+      const args = parts.slice(1);
+      const command = global.commands?.get(cmdName) || global.nonPrefixCommands?.get(cmdName);
+
+      if (command) {
+        const userRole = getGuestUserRole(session.uid);
+        const commandRole = command.config?.role ?? command.role ?? 0;
+        if (userRole >= commandRole) {
+          const fakeEvent = {
+            type: "message", threadID: groupThreadId,
+            senderID: String(session.uid),
+            messageID: userMsgId,
+            body, attachments: [], timestamp: Date.now(),
+            isGroup: true,
+            messageReply: null,
+          };
+          await new Promise(async resolve => {
+            const timeout = setTimeout(resolve, 5000);
+            const done = () => { clearTimeout(timeout); resolve(); };
+            try {
+              if (command.execute) {
+                const r = command.execute(vApi, fakeEvent, args, global.commands, prefix, global.config?.admins||[], global.appState, null, global.usersData, global.globalData);
+                if (r?.then) await r;
+              } else if (command.run) {
+                const r = command.run({ api: vApi, event: fakeEvent, args, attachments: [], usersData: global.usersData, globalData: global.globalData, admins: global.config?.admins||[], prefix, db: global.db, commands: global.commands });
+                if (r?.then) await r;
+              }
+            } catch(err) {
+              responseBuffer.push({ type:"message", body:"Command error: "+err.message, attachments:[], timestamp:Date.now(), messageID: "vmsg_err_"+Date.now() });
+            }
+            setTimeout(done, 200);
+          });
+        } else {
+          responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_perm_"+Date.now() });
         }
       } else {
-        responseBuffer.push({ type:"message", body:`Permission denied. Requires role ${commandRole}.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_perm_"+Date.now() });
+        responseBuffer.push({ type:"message", body:`Command "${cmdName}" not found. Use ${prefix}help.`, attachments:[], timestamp:Date.now(), messageID:"vmsg_nf_"+Date.now() });
       }
+
+      // Save bot responses — store vmsgId so replies can be matched later
       for (const r of responseBuffer) {
         if (r.body?.trim() || r.attachments?.length) {
           const botMsgVmsgId = r.messageID || ("vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6));
