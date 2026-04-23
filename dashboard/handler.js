@@ -1045,10 +1045,6 @@ module.exports = function mountDashboard(app) {
 
         const prefix = global.config?.Prefix?.[0] || "/";
         const trimmed = input.trim();
-        
-        const responseBuffer = [];
-        const vApi = createVirtualApi(session.uid, responseBuffer);
-        
         let command = null;
         let body = trimmed;
         let cmdName = "";
