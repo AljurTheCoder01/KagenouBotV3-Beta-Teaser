@@ -1,4 +1,4 @@
-const path   = require("path");
+const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
 
@@ -1206,6 +1206,173 @@ module.exports = function mountDashboard(app) {
       return res.json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
+  const PREMIUM_COLLECTION = "premiumUsers";
+  const PREMIUM_REQUESTS   = "premiumRequests";
+  const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09XX-XXX-XXXX";
+  const PREMIUM_PRICE_PHP  = 49;
+  const PREMIUM_PRICE_USD  = 1.99;
+  const PREMIUM_DAYS       = 30;
+
+  async function isPremiumActive(uid) {
+    if (!global.db) return false;
+    const doc = await global.db.db(PREMIUM_COLLECTION).findOne({ uid: String(uid) });
+    if (!doc || !doc.active) return false;
+    if (doc.expiresAt && Date.now() > doc.expiresAt) {
+      await global.db.db(PREMIUM_COLLECTION).updateOne({ uid: String(uid) }, { $set: { active: false } });
+      return false;
+    }
+    return true;
+  }
+
+  async function activatePremium(uid, name) {
+    const expiresAt = Date.now() + PREMIUM_DAYS * 24 * 60 * 60 * 1000;
+    await global.db.db(PREMIUM_COLLECTION).updateOne(
+      { uid: String(uid) },
+      { $set: { uid: String(uid), name, active: true, activatedAt: Date.now(), expiresAt } },
+      { upsert: true }
+    );
+    if (global.config && Array.isArray(global.config.moderators)) {
+      if (!global.config.moderators.includes(String(uid))) {
+        global.config.moderators.push(String(uid));
+        const cfgPath = require("path").join(__dirname, "../config.json");
+        const fs2 = require("fs-extra");
+        if (fs2.existsSync(cfgPath)) {
+          fs2.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
+        }
+      }
+    }
+  }
+
+  async function deactivatePremium(uid) {
+    await global.db.db(PREMIUM_COLLECTION).updateOne({ uid: String(uid) }, { $set: { active: false } });
+    if (global.config && Array.isArray(global.config.moderators)) {
+      global.config.moderators = global.config.moderators.filter(m => String(m) !== String(uid));
+      const cfgPath = require("path").join(__dirname, "../config.json");
+      const fs2 = require("fs-extra");
+      if (fs2.existsSync(cfgPath)) {
+        fs2.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
+      }
+    }
+  }
+
+  app.get("/premium/info", (req, res) => {
+    return res.json({
+      ok: true,
+      price: { php: PREMIUM_PRICE_PHP, usd: PREMIUM_PRICE_USD },
+      days: PREMIUM_DAYS,
+      gcash: GCASH_NUMBER,
+      perks: ["Moderator role", "Access to premium commands", "Priority support"],
+    });
+  });
+
+  app.get("/premium/status", async (req, res) => {
+    const session = getGuestSession(req.headers["x-guest-token"]);
+    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
+    if (!global.db) return res.json({ ok: true, active: false, premium: null });
+    try {
+      const doc = await global.db.db(PREMIUM_COLLECTION).findOne({ uid: session.uid });
+      const active = await isPremiumActive(session.uid);
+      return res.json({ ok: true, active, premium: doc || null });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/premium/submit", async (req, res) => {
+    const session = getGuestSession(req.headers["x-guest-token"]);
+    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    const { phone, email, name, uid, receiptImage } = req.body || {};
+    if (!phone?.trim())        return res.status(400).json({ ok: false, error: "Phone number is required." });
+    if (!email?.trim())        return res.status(400).json({ ok: false, error: "Email is required." });
+    if (!name?.trim())         return res.status(400).json({ ok: false, error: "Name is required." });
+    if (!uid?.trim())          return res.status(400).json({ ok: false, error: "Facebook UID is required." });
+    if (!receiptImage)         return res.status(400).json({ ok: false, error: "Receipt screenshot is required." });
+    if (!/^\d+$/.test(uid.trim())) return res.status(400).json({ ok: false, error: "UID must be numeric." });
+    if (Buffer.byteLength(receiptImage.split(",")[1] || receiptImage, "base64") > 8 * 1024 * 1024)
+      return res.status(413).json({ ok: false, error: "Receipt image too large. Max 8MB." });
+    try {
+      const existing = await global.db.db(PREMIUM_REQUESTS).findOne({ uid: uid.trim(), status: "pending" });
+      if (existing) return res.status(409).json({ ok: false, error: "You already have a pending request." });
+      const already = await isPremiumActive(uid.trim());
+      if (already) return res.status(409).json({ ok: false, error: "This UID already has an active premium subscription." });
+      const id = newId();
+      await global.db.db(PREMIUM_REQUESTS).insertOne({
+        id, uid: uid.trim(), name: name.trim(),
+        phone: phone.trim(), email: email.trim(),
+        receiptImage, status: "pending",
+        submittedAt: Date.now(), submittedBy: session.uid,
+      });
+      global.log.info("[PREMIUM] New request submitted by UID " + uid.trim());
+      return res.json({ ok: true, requestId: id });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get("/data/premium/requests", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      const status = req.query.status || "pending";
+      const requests = await global.db.db(PREMIUM_REQUESTS).find(status === "all" ? {} : { status }).sort({ submittedAt: -1 }).limit(100).toArray();
+      return res.json({ ok: true, requests });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/data/premium/approve/:id", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      const r = await global.db.db(PREMIUM_REQUESTS).findOne({ id: req.params.id });
+      if (!r) return res.status(404).json({ ok: false, error: "Request not found." });
+      if (r.status !== "pending") return res.status(409).json({ ok: false, error: "Request already processed." });
+      await activatePremium(r.uid, r.name);
+      await global.db.db(PREMIUM_REQUESTS).updateOne({ id: req.params.id }, { $set: { status: "approved", processedAt: Date.now() } });
+      global.log.success("[PREMIUM] Approved UID " + r.uid);
+      return res.json({ ok: true, uid: r.uid, name: r.name });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/data/premium/reject/:id", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      const r = await global.db.db(PREMIUM_REQUESTS).findOne({ id: req.params.id });
+      if (!r) return res.status(404).json({ ok: false, error: "Request not found." });
+      await global.db.db(PREMIUM_REQUESTS).updateOne({ id: req.params.id }, { $set: { status: "rejected", processedAt: Date.now() } });
+      global.log.info("[PREMIUM] Rejected request from UID " + r.uid);
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.post("/data/premium/revoke/:uid", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      await deactivatePremium(req.params.uid);
+      global.log.info("[PREMIUM] Revoked premium for UID " + req.params.uid);
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  app.get("/data/premium/subscribers", async (req, res) => {
+    if (!checkAuth(req, res)) return;
+    if (!global.db) return res.status(503).json({ ok: false, error: "Database not connected." });
+    try {
+      const subs = await global.db.db(PREMIUM_COLLECTION).find({}).sort({ activatedAt: -1 }).toArray();
+      return res.json({ ok: true, subscribers: subs });
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  setInterval(async () => {
+    if (!global.db) return;
+    try {
+      const expired = await global.db.db(PREMIUM_COLLECTION).find({ active: true, expiresAt: { $lt: Date.now() } }).toArray();
+      for (const doc of expired) {
+        await deactivatePremium(doc.uid);
+        global.log.info("[PREMIUM] Auto-expired UID " + doc.uid);
+      }
+    } catch (e) { global.log.error("[PREMIUM] Expiry check failed: " + e.message); }
+  }, 1000 * 60 * 60);
+
+  app.get("/transaction", (req, res) => res.sendFile(require("path").join(__dirname, "index.html")));
 
   global.log.success("[GUEST] Guest mode mounted at /guest");
 };
