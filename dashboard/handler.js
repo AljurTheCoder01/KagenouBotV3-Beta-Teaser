@@ -1206,6 +1206,7 @@ module.exports = function mountDashboard(app) {
       return res.json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
+  
   const PREMIUM_COLLECTION = "premiumUsers";
   const PREMIUM_REQUESTS   = "premiumRequests";
   const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09XX-XXX-XXXX";
@@ -1375,4 +1376,5 @@ module.exports = function mountDashboard(app) {
   app.get("/transaction", (req, res) => res.sendFile(require("path").join(__dirname, "index.html")));
 
   global.log.success("[GUEST] Guest mode mounted at /guest");
+  global.log.success("[PREMIUM] Premium subscription system mounted.");
 };
