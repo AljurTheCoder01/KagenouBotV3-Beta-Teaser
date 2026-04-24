@@ -1207,6 +1207,8 @@ module.exports = function mountDashboard(app) {
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
   
+   global.log.success("[GUEST] Guest mode mounted at /guest");
+
   const PREMIUM_COLLECTION = "premiumUsers";
   const PREMIUM_REQUESTS   = "premiumRequests";
   const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09XX-XXX-XXXX";
@@ -1235,11 +1237,8 @@ module.exports = function mountDashboard(app) {
     if (global.config && Array.isArray(global.config.moderators)) {
       if (!global.config.moderators.includes(String(uid))) {
         global.config.moderators.push(String(uid));
-        const cfgPath = require("path").join(__dirname, "../config.json");
-        const fs2 = require("fs-extra");
-        if (fs2.existsSync(cfgPath)) {
-          fs2.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
-        }
+        const cfgPath = path.join(__dirname, "../config.json");
+        if (fs.existsSync(cfgPath)) fs.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
       }
     }
   }
@@ -1248,22 +1247,13 @@ module.exports = function mountDashboard(app) {
     await global.db.db(PREMIUM_COLLECTION).updateOne({ uid: String(uid) }, { $set: { active: false } });
     if (global.config && Array.isArray(global.config.moderators)) {
       global.config.moderators = global.config.moderators.filter(m => String(m) !== String(uid));
-      const cfgPath = require("path").join(__dirname, "../config.json");
-      const fs2 = require("fs-extra");
-      if (fs2.existsSync(cfgPath)) {
-        fs2.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
-      }
+      const cfgPath = path.join(__dirname, "../config.json");
+      if (fs.existsSync(cfgPath)) fs.writeFileSync(cfgPath, JSON.stringify(global.config, null, 2));
     }
   }
 
   app.get("/premium/info", (req, res) => {
-    return res.json({
-      ok: true,
-      price: { php: PREMIUM_PRICE_PHP, usd: PREMIUM_PRICE_USD },
-      days: PREMIUM_DAYS,
-      gcash: GCASH_NUMBER,
-      perks: ["Moderator role", "Access to premium commands", "Priority support"],
-    });
+    return res.json({ ok: true, price: { php: PREMIUM_PRICE_PHP, usd: PREMIUM_PRICE_USD }, days: PREMIUM_DAYS, gcash: GCASH_NUMBER, perks: ["Moderator role", "Access to NSFW commands", "Premium badge"] });
   });
 
   app.get("/premium/status", async (req, res) => {
@@ -1296,12 +1286,7 @@ module.exports = function mountDashboard(app) {
       const already = await isPremiumActive(uid.trim());
       if (already) return res.status(409).json({ ok: false, error: "This UID already has an active premium subscription." });
       const id = newId();
-      await global.db.db(PREMIUM_REQUESTS).insertOne({
-        id, uid: uid.trim(), name: name.trim(),
-        phone: phone.trim(), email: email.trim(),
-        receiptImage, status: "pending",
-        submittedAt: Date.now(), submittedBy: session.uid,
-      });
+      await global.db.db(PREMIUM_REQUESTS).insertOne({ id, uid: uid.trim(), name: name.trim(), phone: phone.trim(), email: email.trim(), receiptImage, status: "pending", submittedAt: Date.now(), submittedBy: session.uid });
       global.log.info("[PREMIUM] New request submitted by UID " + uid.trim());
       return res.json({ ok: true, requestId: id });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
@@ -1366,14 +1351,7 @@ module.exports = function mountDashboard(app) {
     if (!global.db) return;
     try {
       const expired = await global.db.db(PREMIUM_COLLECTION).find({ active: true, expiresAt: { $lt: Date.now() } }).toArray();
-      for (const doc of expired) {
-        await deactivatePremium(doc.uid);
-        global.log.info("[PREMIUM] Auto-expired UID " + doc.uid);
-      }
+      for (const doc of expired) { await deactivatePremium(doc.uid); global.log.info("[PREMIUM] Auto-expired UID " + doc.uid); }
     } catch (e) { global.log.error("[PREMIUM] Expiry check failed: " + e.message); }
   }, 1000 * 60 * 60);
-
-  app.get("/transaction", (req, res) => res.sendFile(require("path").join(__dirname, "index.html")));
-
-  global.log.success("[GUEST] Guest mode mounted at /guest");
 };
