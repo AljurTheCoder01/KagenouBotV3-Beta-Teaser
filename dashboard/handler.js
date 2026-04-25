@@ -1209,7 +1209,7 @@ module.exports = function mountDashboard(app) {
   
   const PREMIUM_COLLECTION = "premiumUsers";
   const PREMIUM_REQUESTS   = "premiumRequests";
-  const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09XX-XXX-XXXX";
+  const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09129121191";
   const PREMIUM_PRICE_PHP  = 49;
   const PREMIUM_PRICE_USD  = 1.99;
   const PREMIUM_DAYS       = 30;
