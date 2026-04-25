@@ -19,15 +19,10 @@ const hentaiCommand = {
       if (!threadID || !messageID) {
         throw new Error('Missing threadID or messageID in event');
       }
-      const response = await axios.get('https://kaiz-apis.gleeze.com/api/hentai', {
-        params: {
-          limit: 1,
-          apikey: '117cafc8-ef3b-4632-bc1c-13b38b912081',
-        },
-      });
+      const response = await axios.get('https://api.waifu.pics/nsfw/waifu');
       const data = response.data;
       console.log('API response:', data);
-      const imageUrl = data.urls?.[0];
+      const imageUrl = data.url?.[0];
       if (!imageUrl) {
         throw new Error('No image URL returned from API');
       }
