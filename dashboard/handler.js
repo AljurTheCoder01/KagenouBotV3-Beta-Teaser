@@ -617,7 +617,7 @@ module.exports = function mountDashboard(app) {
       if (global.trackUsage) global.trackUsage(cmdName);
 
       await new Promise(async (resolve) => {
-        const timeout = setTimeout(resolve, 5000);
+        const timeout = setTimeout(resolve, 90000);
         const done = () => { clearTimeout(timeout); resolve(); };
         try {
           if (command.execute) {
@@ -630,7 +630,7 @@ module.exports = function mountDashboard(app) {
         } catch (err) {
           responseBuffer.push({ type: "message", body: "Command error: " + err.message, attachments: [], timestamp: Date.now() });
         }
-        setTimeout(done, 200);
+        setTimeout(done, 500);
       });
 
     } catch (err) {
