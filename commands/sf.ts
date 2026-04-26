@@ -11,6 +11,7 @@ const sfCommand: ShadowBot.Command = {
     description: "Compile and send an SFM video.",
     role: 0,
     cooldown: 15,
+    nsfw: true,
   },
   run: async ({ api, event }) => {
     const { threadID, messageID } = event;
