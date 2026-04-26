@@ -19,6 +19,7 @@ const sfCommand: ShadowBot.Command = {
     try {
       const { data: json } = await axios.get("https://oreo.gleeze.com/api/sfmcompile", {
         params: { stream: false },
+        timeout: 15000,
       });
 
       const title: string = json?.title || "SFM Video";
@@ -57,7 +58,7 @@ const sfCommand: ShadowBot.Command = {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
           "Referer": "https://sfmcompile.club/",
         },
-        timeout: 60000,
+        timeout: 120000,
       });
 
       const vidWriter = fs.createWriteStream(vidPath);
@@ -77,19 +78,20 @@ const sfCommand: ShadowBot.Command = {
         footerText: "Developed by: **Aljur Pogoy**",
       });
 
-      await api.sendMessage(
-        {
-          body: videoMessage,
-          attachment: fs.createReadStream(vidPath),
-        },
-        threadID,
-        messageID
-      );
-
-      fs.unlinkSync(vidPath);
+      await new Promise<void>((resolve, reject) => {
+        api.sendMessage(
+          { body: videoMessage, attachment: fs.createReadStream(vidPath) },
+          threadID,
+          (err: any) => {
+            if (fs.existsSync(vidPath)) fs.unlinkSync(vidPath);
+            if (err) reject(err);
+            else resolve();
+          },
+          messageID
+        );
+      });
 
     } catch (error: any) {
-      console.error("SFM Command Error:", error);
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "SFM Compile",
         headerSymbol: "❌",
