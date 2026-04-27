@@ -208,18 +208,20 @@ const reloadCommands = () => {
 };
 global.reloadCommands = reloadCommands;
 
-let appState;
+let appState = null;
+let dashboardOnly = false;
 try {
   if (process.env.APPSTATE) {
     appState = JSON.parse(process.env.APPSTATE);
-    console.log("[APPSTATE] Loaded from environment variable.");
-  } else {
+  } else if (fs.existsSync("./appstate.dev.json")) {
     appState = JSON.parse(fs.readFileSync("./appstate.dev.json", "utf8"));
-    console.log("[APPSTATE] Loaded from appstate.dev.json file.");
+  } else {
+    console.warn("No appstate found — running in dashboard-only mode.");
+    dashboardOnly = true;
   }
 } catch (error) {
-  console.error("[APPSTATE] Failed to load appstate:", error.message);
-  process.exit(1);
+  console.error("failed to load appstate:", error.message);
+  dashboardOnly = true;
 }
 try {
   const configData = JSON.parse(fs.readFileSync(configFile, "utf8"));
@@ -812,6 +814,10 @@ const startBot = async () => {
   loadBannedUsers();
   await initProfanityFilter();
   await connectDB();
+  if (dashboardOnly) {
+    console.log("[BOT] Dashboard-only mode active.");
+    return;
+  }
 
   login({ appState }, (err, api) => {
     if (err) {
