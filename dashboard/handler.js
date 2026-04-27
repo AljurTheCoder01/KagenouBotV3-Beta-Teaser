@@ -7,10 +7,6 @@ const axios = require("axios");
 
 const sessions   = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
-const relaxedAgent = new https.Agent({ rejectUnauthorized: false });
-const uidCache = new Map();
-const UID_CACHE_TTL = 10 * 60 * 1000;
-
 
 function createSession() {
   const token = crypto.randomBytes(32).toString("hex");
@@ -112,85 +108,6 @@ module.exports = function mountDashboard(app) {
       return res.status(500).json({ ok: false, error: err.message });
     }
   });
-
-  function uidCacheGet(key) {
-  const entry = uidCache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.ts > UID_CACHE_TTL) { uidCache.delete(key); return null; }
-  return entry.value;
-}
-
-function uidCacheSet(key, value) {
-  uidCache.set(key, { value, ts: Date.now() });
-}
-
-function uidNormalizeToURL(input) {
-  input = input.trim();
-  if (/^https?:\/\//i.test(input)) return input;
-  if (/^\d+$/.test(input)) return `https://www.facebook.com/profile.php?id=${input}`;
-  return `https://www.facebook.com/${input}`;
-}
-
-function uidParseDirectUID(input) {
-  input = input.trim();
-  if (/^\d+$/.test(input)) return input;
-  const m = input.match(/profile\.php\?id=(\d+)/);
-  if (m) return m[1];
-  return null;
-}
-
-async function uidGetFast(url) {
-  const form = new FormData();
-  form.append("link", new URL(url).href);
-  const { data } = await axios.post("https://id.traodoisub.com/api.php", form, {
-    headers: form.getHeaders(), timeout: 20000, maxRedirects: 5
-  });
-  if (data.error) throw new Error(data.error);
-  const id = String(data.id || "");
-  if (!id || isNaN(id)) throw new Error("No UID in response");
-  return id;
-}
-
-async function uidGetSlow(url) {
-  const UAS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/58.0.3029.110 Safari/537.3",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 Version/14.2 Mobile/15E148 Safari/604.1",
-  ];
-  const form = new FormData();
-  const username = new URL(url).pathname.replace(/\//g, "");
-  form.append("username", username);
-  const { data } = await axios.post("https://api.findids.net/api/get-uid-from-username", form, {
-    headers: { "User-Agent": UAS[Math.floor(Math.random() * UAS.length)], ...form.getHeaders() },
-    timeout: 10000, httpsAgent: relaxedAgent, maxRedirects: 5
-  });
-  if (data.status !== 200) throw new Error("findids: request failed");
-  if (typeof data.error === "string") throw new Error(data.error);
-  const id = String(data.data?.id || "");
-  if (!id || isNaN(id)) throw new Error("No UID in response");
-  return id;
-}
-
-app.get("/uid", async (req, res) => {
-  const input = (req.query.url || "").trim();
-  if (!input) return res.status(400).json({ ok: false, error: "Missing url param" });
-
-  const direct = uidParseDirectUID(input);
-  if (direct) return res.json({ ok: true, uid: direct, profile_url: `https://www.facebook.com/profile.php?id=${direct}` });
-
-  const fbUrl = uidNormalizeToURL(input);
-  const cached = uidCacheGet(fbUrl);
-  if (cached) return res.json({ ok: true, uid: cached, profile_url: `https://www.facebook.com/profile.php?id=${cached}` });
-
-  try {
-    let uid;
-    try { uid = await uidGetFast(fbUrl); }
-    catch { uid = await uidGetSlow(fbUrl); }
-    uidCacheSet(fbUrl, uid);
-    return res.json({ ok: true, uid, profile_url: `https://www.facebook.com/profile.php?id=${uid}` });
-  } catch (err) {
-    return res.status(502).json({ ok: false, error: "Failed to retrieve UID", details: err.message });
-  }
-});
 
   app.post("/data/message", async (req, res) => {
     if (!checkAuth(req, res)) return;
