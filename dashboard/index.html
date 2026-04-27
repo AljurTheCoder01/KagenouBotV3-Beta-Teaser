@@ -308,6 +308,11 @@
         <span class="mode-label">Guest</span>
         <span class="mode-desc">Try commands</span>
       </button>
+     <button class="mode-btn" onclick="pickMode('uid')">
+      <span class="mode-icon">🔍</span>
+      <span class="mode-label">UID Finder</span>
+      <span class="mode-desc">Get Facebook UID</span>
+     </button>
     </div>
     <div class="auth-sub-form" id="adminForm">
       <button class="btn-back" onclick="resetMode()">← Back</button>
@@ -368,10 +373,27 @@
       <button class="btn btn-primary" id="guestLoginBtn" onclick="guestLogin()">Sign In</button>
       <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:12px">No account yet? <span style="color:var(--accent);cursor:pointer;font-weight:500" onclick="switchToGuestRegister()">Create one</span></p>
     </div>
+    <div class="auth-sub-form" id="uidForm">
+  <button class="btn-back" onclick="resetMode()">← Back</button>
+  <div class="fg">
+    <label>Facebook URL or Username</label>
+    <input type="text" id="uidInput" placeholder="e.g. zuck or https://facebook.com/zuck"/>
+    <div style="font-size:12px;color:var(--muted);margin-top:5px">Enter a username, profile URL, or numeric ID.</div>
+  </div>
+  <button class="btn btn-primary" id="uidLookupBtn" onclick="lookupUID()">Find UID</button>
+  <div class="auth-toast" id="uidResult" style="margin-top:12px"></div>
+  <div id="uidResultCard" style="display:none;margin-top:14px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px">Result</div>
+    <div id="uidResultUID" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;word-break:break-all"></div>
+    <a id="uidResultLink" href="#" target="_blank" style="font-size:12px;color:var(--accent);margin-top:6px;display:block"></a>
+    <button onclick="copyUID()" class="btn btn-outline btn-sm" style="margin-top:12px;width:100%">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy UID
+    </button>
+   </div>
     <div class="auth-toast" id="authToast"></div>
   </div>
 </div>
-
 <div id="adminApp">
   <header class="topbar">
     <div class="topbar-brand">
@@ -884,6 +906,40 @@
 </div>
 
 <script>
+  async function lookupUID() {
+  const input = document.getElementById('uidInput').value.trim();
+  const btn = document.getElementById('uidLookupBtn');
+  const toast = document.getElementById('uidResult');
+  const card = document.getElementById('uidResultCard');
+  toast.className = 'auth-toast'; toast.textContent = '';
+  card.style.display = 'none';
+  if (!input) { toast.className = 'auth-toast err'; toast.textContent = 'Please enter a username or URL.'; return; }
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  try {
+    const res = await fetch('/uid-lookup?url=' + encodeURIComponent(input)).then(r => r.json());
+    if (!res.ok || res.error) {
+      toast.className = 'auth-toast err';
+      toast.textContent = res.error || res.details || 'Could not find UID.';
+    } else {
+      document.getElementById('uidResultUID').textContent = res.uid;
+      const link = document.getElementById('uidResultLink');
+      link.href = res.profile_url; link.textContent = res.profile_url;
+      card.style.display = 'block';
+      window._lastUID = res.uid;
+    }
+  } catch { toast.className = 'auth-toast err'; toast.textContent = 'Could not reach the server.'; }
+  finally { btn.innerHTML = 'Find UID'; btn.disabled = false; }
+}
+
+function copyUID() {
+  if (!window._lastUID) return;
+  navigator.clipboard?.writeText(window._lastUID).then(() => {
+    const btn = document.querySelector('#uidResultCard button');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+  }
 
 const PAGE = (() => {
   const p = window.location.pathname;
@@ -971,6 +1027,9 @@ function pickMode(mode) {
     document.getElementById('guestRegisterForm').classList.add('visible');
     setTimeout(() => document.getElementById('regUidInput')?.focus(), 80);
     if (window.location.pathname !== '/guest') history.replaceState(null,'','/guest');
+  } else if (mode === 'uid') {
+  document.getElementById('uidForm').classList.add('visible');
+  setTimeout(() => document.getElementById('uidInput')?.focus(), 80);
   }
 }
 
