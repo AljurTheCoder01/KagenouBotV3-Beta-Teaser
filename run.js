@@ -12,13 +12,11 @@ const hasAppState =
 
 const script =
   config.DiscordMode   ? "./Discord/index"   :
-  config.TelegramMode  ? "./telegram/index"  :
   "./index";
 
 const modeName =
   config.DiscordMode   ? "Discord-KagenouBot"   :
-  config.TelegramMode  ? "Telegram-KagenouBot"  :
-  !hasAppState         ? "Dashboard-Only"        :
+  !hasAppState         ? "Dashboard-Only"       :
   "FB-KagenouBot";
 
 global.log.info(`[RUN] Starting ${modeName} bot…`);
