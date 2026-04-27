@@ -1209,6 +1209,58 @@ module.exports = function mountDashboard(app) {
       return res.json({ ok: true });
     } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   });
+
+  app.get("/uid-lookup", async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ ok: false, error: "Missing url param." });
+  try {
+    const https = require("https");
+    const FormData = require("form-data");
+    const axios = require("axios");
+    const { URL: NodeURL } = require("url");
+
+    const relaxedAgent = new https.Agent({ rejectUnauthorized: false });
+    const input = url.trim();
+    if (/^\d+$/.test(input)) {
+      return res.json({ ok: true, uid: input, profile_url: `https://www.facebook.com/profile.php?id=${input}`, input });
+    }
+    const profileMatch = input.match(/profile\.php\?id=(\d+)/);
+    if (profileMatch) {
+      return res.json({ ok: true, uid: profileMatch[1], profile_url: `https://www.facebook.com/profile.php?id=${profileMatch[1]}`, input });
+    }
+
+    const fbUrl = /^https?:\/\//i.test(input)
+      ? input
+      : /^\d+$/.test(input)
+        ? `https://www.facebook.com/profile.php?id=${input}`
+        : `https://www.facebook.com/${input}`;
+    let uid = null;
+    try {
+      const form1 = new FormData();
+      form1.append("link", new NodeURL(fbUrl).href);
+      const { data: d1 } = await axios.post("https://id.traodoisub.com/api.php", form1, { headers: form1.getHeaders(), timeout: 20000 });
+      if (!d1.error && d1.id && !isNaN(String(d1.id))) uid = String(d1.id);
+    } catch {}
+    if (!uid) {
+      try {
+        const username = new NodeURL(fbUrl).pathname.replace(/\//g, "");
+        const form2 = new FormData();
+        form2.append("username", username);
+        const USER_AGENTS = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/58.0 Safari/537.3"];
+        const { data: d2 } = await axios.post("https://api.findids.net/api/get-uid-from-username", form2, {
+          headers: { "User-Agent": USER_AGENTS[0], ...form2.getHeaders() },
+          timeout: 10000, httpsAgent: relaxedAgent,
+        });
+        if (d2.status === 200 && d2.data?.id && !isNaN(String(d2.data.id))) uid = String(d2.data.id);
+      } catch {}
+    }
+
+    if (!uid) return res.status(502).json({ ok: false, error: "Both lookup methods failed.", details: "Could not resolve UID for this profile.", input });
+    return res.json({ ok: true, uid, profile_url: `https://www.facebook.com/profile.php?id=${uid}`, input });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: "Server error.", details: err.message });
+  }
+});
   
   const PREMIUM_COLLECTION = "premiumUsers";
   const PREMIUM_REQUESTS   = "premiumRequests";
