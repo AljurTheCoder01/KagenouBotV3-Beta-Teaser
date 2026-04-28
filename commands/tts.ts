@@ -2,6 +2,7 @@ import AuroraBetaStyler from "@aurora/styler";
 import axios from "axios";
 import fs from "fs-extra";
 import path from "path";
+import { createWriteStream } from "fs";
 
 const ttsCommand: ShadowBot.Command = {
   config: {
@@ -13,7 +14,7 @@ const ttsCommand: ShadowBot.Command = {
   },
   run: async ({ api, event, args }) => {
     const { threadID, messageID, senderID } = event;
-    const { createReadStream, unlinkSync } = fs;
+    const { unlinkSync } = fs;
     const { resolve } = path;
 
     const text = args.join(" ");
@@ -41,13 +42,26 @@ const ttsCommand: ShadowBot.Command = {
       }
 
       const mp3Url = response.data.mp3DownloadUrl;
-      const cachePath = resolve(__dirname, 'cache', `${threadID}_${senderID}.mp3`);
+      const cacheDir = resolve(__dirname, 'cache');
+      const cachePath = resolve(cacheDir, `${threadID}_${senderID}.mp3`);
 
-      if (!fs.existsSync(path.join(__dirname, 'cache'))) {
-        fs.mkdirSync(path.join(__dirname, 'cache'), { recursive: true });
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
       }
 
-      await global.utils.downloadFile(mp3Url, cachePath);
+      const writer = createWriteStream(cachePath);
+      const mp3Response = await axios({
+        method: 'GET',
+        url: mp3Url,
+        responseType: 'stream',
+      });
+
+      mp3Response.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
 
       const audioMessage = AuroraBetaStyler.styleOutput({
         headerText: "Text to Speech",
@@ -60,7 +74,7 @@ const ttsCommand: ShadowBot.Command = {
 
       api.sendMessage({
         body: audioMessage,
-        attachment: createReadStream(cachePath)
+        attachment: fs.createReadStream(cachePath)
       }, threadID, () => {
         if (fs.existsSync(cachePath)) {
           unlinkSync(cachePath);
@@ -68,7 +82,6 @@ const ttsCommand: ShadowBot.Command = {
       }, messageID);
 
     } catch (error: any) {
-      console.error("TTS Error:", error);
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "Text to Speech",
         headerSymbol: "❌",
