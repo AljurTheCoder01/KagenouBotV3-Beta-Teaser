@@ -35,14 +35,17 @@ const ttsCommand: ShadowBot.Command = {
         timeout: 15000,
       });
 
+      // Check if success is true AND mp3DownloadUrl exists
       if (!json.success || !json.mp3DownloadUrl) {
         throw new Error("Failed to generate TTS audio.");
       }
+      
       const mp3DownloadUrl: string = json.mp3DownloadUrl;
       const cacheDir = path.join(__dirname, "cache");
       if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
       const mp3Name = `tts_${crypto.randomUUID()}.mp3`;
       const mp3Path = path.join(cacheDir, mp3Name);
+      
       const mp3Stream = await axios.get(mp3DownloadUrl, {
         responseType: "stream",
         timeout: 30000,
@@ -70,7 +73,9 @@ const ttsCommand: ShadowBot.Command = {
           { body: audioMessage, attachment: fs.createReadStream(mp3Path) },
           threadID,
           (err: any) => {
-            if (fs.existsSync(mp3Path)) fs.unlinkSync(mp3Path);
+            if (fs.existsSync(mp3Path)) {
+              fs.unlinkSync(mp3Path);
+            }
             if (err) reject(err);
             else resolve();
           },
@@ -80,7 +85,7 @@ const ttsCommand: ShadowBot.Command = {
 
     } catch (error: any) {
       const errorMessage = AuroraBetaStyler.styleOutput({
-        headerText: "Text to speech",
+        headerText: "Text to Speech",
         headerSymbol: "❌",
         headerStyle: "bold",
         bodyText: `Error: ${error.message}`,
