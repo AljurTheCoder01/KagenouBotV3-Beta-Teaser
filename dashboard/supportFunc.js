@@ -47,6 +47,29 @@ function askNotifPermission() {
   }
 }
 
+function showNotificationPrompt() {
+  const banner = document.createElement('div');
+  banner.innerHTML = `
+    <div style="position:fixed; bottom:20px; right:20px; background:#1a1a2e; color:white; padding:15px 20px; border-radius:8px; z-index:9999; font-family:sans-serif; box-shadow:0 4px 12px rgba(0,0,0,0.3); cursor:pointer; transition:opacity 0.3s;">
+      🔔 Click anywhere to enable notifications
+    </div>
+  `;
+  const bannerDiv = banner.firstChild;
+  document.body.appendChild(bannerDiv);
+  
+  bannerDiv.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bannerDiv.remove();
+  });
+  
+  setTimeout(() => {
+    if (bannerDiv && bannerDiv.remove) {
+      bannerDiv.style.opacity = '0';
+      setTimeout(() => bannerDiv.remove(), 300);
+    }
+  }, 5000);
+}
+
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 document.addEventListener('keydown', e => {
@@ -71,9 +94,13 @@ document.addEventListener('selectstart', e => e.preventDefault());
   }, 1000);
 })();
 
-document.addEventListener('click', function triggerOnce() {
-  askNotifPermission();
-  document.removeEventListener('click', triggerOnce);
+document.addEventListener('DOMContentLoaded', function() {
+  showNotificationPrompt();
+  
+  document.addEventListener('click', function triggerOnce() {
+    askNotifPermission();
+    document.removeEventListener('click', triggerOnce);
+  });
+  
+  setTimeout(sendDashboardNotif, 30 * 1000);
 });
-
-setTimeout(sendDashboardNotif, 30 * 1000);
