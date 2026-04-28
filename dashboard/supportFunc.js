@@ -1,41 +1,63 @@
-async function lookupUID() {
-  const input = document.getElementById('uidInput').value.trim();
-  const btn = document.getElementById('uidLookupBtn');
-  const resultBox = document.getElementById('uidResult');
-  const resultValue = document.getElementById('uidResultValue');
-  const resultUrl = document.getElementById('uidResultUrl');
+const NOTIF_MESSAGES = [
+  { title: 'Shadow Garden Bot', body: 'Your bot is running smoothly! Check the dashboard for updates.' },
+  { title: '📊 Dashboard Reminder', body: 'Don\'t forget to check your bot stats and top commands!' },
+  { title: 'Shadow Garden', body: 'Review any pending banned users or maintenance settings.' },
+  { title: '⭐ Premium Requests', body: 'Check if there are new premium subscription requests waiting.' },
+  { title: 'Bot Activity', body: 'Your bot has been active! View the latest command usage.' },
+  { title: 'Shadow Garden', body: 'Reminder: Check your guest accounts and group messages.' },
+];
 
-  clearAuthToast();
-  resultBox.style.display = 'none';
+let notifIndex = 0;
 
-  if (!input) { showAuthToast('Please enter a URL or username.'); return; }
+function showNotif() {
+  const msg = NOTIF_MESSAGES[notifIndex % NOTIF_MESSAGES.length];
+  notifIndex++;
+  const notif = new Notification(msg.title, {
+    body: msg.body,
+    icon: './assets/favicon.ico',
+    badge: './assets/apple-touch-icon.png',
+    silent: false,
+  });
+  setTimeout(() => notif.close(), 6000);
+  notif.onclick = () => { window.focus(); notif.close(); };
+}
 
-  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
-
-  try {
-    const res = await fetch(`/uid?url=${encodeURIComponent(input)}`);
-    const d = await res.json();
-
-    if (!d.ok) { showAuthToast(d.error || 'Failed to find UID.'); return; }
-
-    resultValue.textContent = d.uid;
-    resultUrl.textContent = d.profile_url;
-    resultBox.style.display = 'block';
-    window._lastUID = d.uid;
-  } catch {
-    showAuthToast('Could not reach the server.');
-  } finally {
-    btn.innerHTML = 'Find UID';
-    btn.disabled = false;
+function sendDashboardNotif() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    showNotif();
+  } else if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { if (p === 'granted') showNotif(); });
   }
 }
 
-function copyUID() {
-  const uid = window._lastUID;
-  if (!uid) return;
-  navigator.clipboard.writeText(uid).then(() => {
-    showAuthToast('UID copied!', 'ok');
-  }).catch(() => {
-    showAuthToast('Copy failed. Try manually.');
-  });
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('keydown', e => {
+  if (
+    e.key === 'F12' ||
+    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
+    (e.ctrlKey && e.key === 'U')
+  ) e.preventDefault();
+});
+
+document.addEventListener('selectstart', e => e.preventDefault());
+
+(function detectDevTools() {
+  const threshold = 160;
+  setInterval(() => {
+    if (
+      window.outerWidth - window.innerWidth > threshold ||
+      window.outerHeight - window.innerHeight > threshold
+    ) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#888;font-size:15px;">⚠️ Access Restricted.</div>';
+    }
+  }, 1000);
+})();
+
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
 }
+
+setTimeout(sendDashboardNotif, 30 * 1000);
+setInterval(sendDashboardNotif, 6 * 60 * 1000);
