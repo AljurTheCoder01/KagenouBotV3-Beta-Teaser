@@ -1107,7 +1107,7 @@ async function adminLogin() {
     localStorage.setItem('sg_tok', ADMIN_TOKEN);
     history.replaceState(null,'','/admin');
     showAuthToast('Welcome back, Admin!', 'ok');
-    setTimeout(() => { showAdminApp(); loadAdminStats(); }, 800);
+    setTimeout(() => { showAdminApp(); loadAdminStats(); }, 2500);
   } catch { showAuthToast('Could not reach the server.'); }
   finally { btn.innerHTML = 'Sign In'; btn.disabled = false; }
 }
@@ -1355,7 +1355,7 @@ async function guestLogin() {
     localStorage.setItem('sg_guest_tok', GUEST_TOKEN);
     localStorage.setItem('sg_guest_uid', SESSION_UID);
     showAuthToast('✓ Welcome back!', 'ok');
-    setTimeout(() => showGuestApp(uid), 700);
+    setTimeout(() => showGuestApp(uid), 2500);
   } catch { showAuthToast('Could not reach the server.'); }
   finally { btn.innerHTML = 'Sign In'; btn.disabled = false; }
 }
