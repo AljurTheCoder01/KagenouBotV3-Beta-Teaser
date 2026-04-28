@@ -11,7 +11,7 @@ const ttsCommand: ShadowBot.Command = {
     role: 2,
     cooldown: 10,
   },
-  run: async ({ api, event, args, message }) => {
+  run: async ({ api, event, args }) => {
     try {
       const { createReadStream, unlinkSync } = fs;
       const { resolve } = path;
