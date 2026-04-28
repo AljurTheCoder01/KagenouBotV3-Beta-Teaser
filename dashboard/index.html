@@ -191,11 +191,20 @@
     .attach-media video{width:100%;max-width:220px;max-height:160px;height:auto;display:block;border-radius:12px;background:#000}
     .attach-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;max-width:220px;text-decoration:none}
     .attach-card svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0}
-    .audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:6px;max-width:240px;box-shadow:var(--shadow)}
+    .audio-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-top:6px;display:flex;flex-direction:column;gap:6px;width:260px;max-width:80vw;box-shadow:var(--shadow)}
     .audio-card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:6px}
     .audio-card-label svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;flex-shrink:0}
-    .audio-card audio{width:100%;display:block;border-radius:8px;outline:none;max-width:100%;overflow:hidden}
-    .audio-card{max-width:240px;overflow:hidden}
+    .audio-card audio{
+    width:100%;
+    display:block;
+    border-radius:8px;
+    outline:none;
+    height:36px;
+    accent-color:var(--accent);
+    color-scheme: dark;
+    }
+[data-theme="light"] .audio-card audio{
+  color-scheme: light;}
     .reaction-btn{font-size:15px;padding:4px 9px;border-radius:99px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:background .12s,transform .1s;line-height:1.4;display:flex;align-items:center;gap:3px;font-family:inherit;min-height:32px;-webkit-tap-highlight-color:transparent}
     .reaction-btn:active{transform:scale(.88)}
     .reaction-btn.reacted{background:var(--accent);border-color:var(--accent);color:#fff}
