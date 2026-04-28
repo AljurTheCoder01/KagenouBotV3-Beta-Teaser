@@ -30,22 +30,30 @@ const ttsCommand: ShadowBot.Command = {
     }
 
     try {
-      const { data: json } = await axios.get("https://api.tts.quest/v3/voicevox/synthesis", {
-        params: { text },
-        timeout: 15000,
-      });
-
-      // Check if success is true AND mp3DownloadUrl exists
-      if (!json.success || !json.mp3DownloadUrl) {
-        throw new Error("Failed to generate TTS audio.");
+      const { data: json } = await axios.post(
+        "https://api.tts.quest/v3/voicevox/synthesis",
+        { text },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 15000,
+        }
+      );
+      if (!json.mp3DownloadUrl) {
+        throw new Error("No MP3 URL received from TTS service.");
       }
-      
+
       const mp3DownloadUrl: string = json.mp3DownloadUrl;
       const cacheDir = path.join(__dirname, "cache");
-      if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+      
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+      
       const mp3Name = `tts_${crypto.randomUUID()}.mp3`;
       const mp3Path = path.join(cacheDir, mp3Name);
-      
+  
       const mp3Stream = await axios.get(mp3DownloadUrl, {
         responseType: "stream",
         timeout: 30000,
@@ -84,11 +92,25 @@ const ttsCommand: ShadowBot.Command = {
       });
 
     } catch (error: any) {
+      console.error("TTS Error:", error.response?.data || error.message);
+      
+      let errorMessageText = `Error: ${error.message}`;
+    
+      if (error.response?.status === 404) {
+        errorMessageText = "TTS API endpoint not found. The service might be down or changed.";
+      } else if (error.response?.status === 400) {
+        errorMessageText = "Invalid request. Please check your text input.";
+      } else if (error.response?.status === 429) {
+        errorMessageText = "Rate limited. Please try again later.";
+      } else if (error.code === "ECONNABORTED") {
+        errorMessageText = "Request timeout. Please try again.";
+      }
+      
       const errorMessage = AuroraBetaStyler.styleOutput({
         headerText: "Text to Speech",
         headerSymbol: "❌",
         headerStyle: "bold",
-        bodyText: `Error: ${error.message}`,
+        bodyText: errorMessageText,
         bodyStyle: "sansSerif",
         footerText: "Developed by: **Aljur Pogoy**",
       });
