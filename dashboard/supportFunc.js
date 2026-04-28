@@ -1,10 +1,10 @@
 const NOTIF_MESSAGES = [
-  { title: 'Shadow Garden Bot', body: 'Your bot is running smoothly! Check the dashboard for updates.' },
+  { title: '🤖 Shadow Garden Bot', body: 'Your bot is running smoothly! Check the dashboard for updates.' },
   { title: '📊 Dashboard Reminder', body: 'Don\'t forget to check your bot stats and top commands!' },
-  { title: 'Shadow Garden', body: 'Review any pending banned users or maintenance settings.' },
+  { title: '🛡️ Shadow Garden', body: 'Review any pending banned users or maintenance settings.' },
   { title: '⭐ Premium Requests', body: 'Check if there are new premium subscription requests waiting.' },
-  { title: 'Bot Activity', body: 'Your bot has been active! View the latest command usage.' },
-  { title: 'Shadow Garden', body: 'Reminder: Check your guest accounts and group messages.' },
+  { title: '💬 Bot Activity', body: 'Your bot has been active! View the latest command usage.' },
+  { title: '🔔 Shadow Garden', body: 'Reminder: Check your guest accounts and group messages.' },
 ];
 
 let notifIndex = 0;
@@ -27,7 +27,23 @@ function sendDashboardNotif() {
   if (Notification.permission === 'granted') {
     showNotif();
   } else if (Notification.permission === 'default') {
-    Notification.requestPermission().then(p => { if (p === 'granted') showNotif(); });
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') showNotif();
+    });
+  }
+}
+
+function askNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        showNotif();
+        setInterval(sendDashboardNotif, 6 * 60 * 1000);
+      }
+    });
+  } else if (Notification.permission === 'granted') {
+    setInterval(sendDashboardNotif, 6 * 60 * 1000);
   }
 }
 
@@ -55,9 +71,9 @@ document.addEventListener('selectstart', e => e.preventDefault());
   }, 1000);
 })();
 
-if ('Notification' in window && Notification.permission === 'default') {
-  Notification.requestPermission();
-}
+document.addEventListener('click', function triggerOnce() {
+  askNotifPermission();
+  document.removeEventListener('click', triggerOnce);
+});
 
 setTimeout(sendDashboardNotif, 30 * 1000);
-setInterval(sendDashboardNotif, 6 * 60 * 1000);
