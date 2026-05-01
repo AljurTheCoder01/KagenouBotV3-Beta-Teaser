@@ -1,26 +1,22 @@
 /**
- * @description
- *   Scans the main `commands/` folder (same one used by Shadow Garden Bot)
- *   and auto-detects which files are GoatBot V2 format vs native format.
- *
  *   GoatBot command schema:
  *     module.exports = {
  *       config: {
- *         name:             string,
- *         aliases:          string[],
- *         version:          string,
- *         author:           string,
- *         countDown:        number,   // cooldown in seconds
- *         role:             number,   // 0=all 1=admin 2=mod 3=vip 4=dev
+ *         name: string,
+ *         aliases: string[],
+ *         version: string,
+ *         author: string,
+ *         countDown: number,   // cooldown in seconds
+ *         role: number,   // 0=all 1=admin 2=mod 3=vip 4=dev
  *         shortDescription: { en: "..." },
  *         longDescription:  { en: "..." },
- *         category:         string,
- *         guide:            { en: "{pn}commandName <args>" },
+ *         category: string,
+ *         guide: { en: "{pn}commandName <args>" },
  *       },
  *       onStart:    async (ctx) => {},
- *       onChat:     async (ctx) => {},   // optional — run on every message
- *       onReply:    async (ctx) => {},   // optional — run on reply
- *       onReaction: async (ctx) => {},   // optional — run on reaction
+ *       onChat:     async (ctx) => {},
+ *       onReply:    async (ctx) => {},
+ *       onReaction: async (ctx) => {}, 
  *     }
  */
 
@@ -31,8 +27,8 @@ const path = require("path");
 
 /**
  * @param {string} commandsDir
- * @param {Map} goatCmdMap
- * @returns {number} count of GoatBot commands found and registered
+ * @param {Map}    goatCmdMap   - global.GoatBot.commands
+ * @returns {number} count cmds goatbot registered
  */
 function load(commandsDir, goatCmdMap) {
   if (!fs.existsSync(commandsDir)) {
@@ -61,7 +57,7 @@ function load(commandsDir, goatCmdMap) {
     const isNative  = _isNativeCommand(cmd);
 
     if (!isGoatBot && !isNative) continue;
-    if (isNative && !isGoatBot) continue;
+    if (isNative && !isGoatBot) continue; 
     const name = (cmd.config?.name || cmd.name || "").toLowerCase();
     if (!name) {
       global.log.warn(`[GoatBot:CommandLoader] Skipped '${file}': no name found`);
@@ -82,7 +78,6 @@ function load(commandsDir, goatCmdMap) {
           global.commands.set(alias.toLowerCase(), wrapped);
         }
       }
-
       if (typeof cmd.onChat === "function") {
         global.GoatBot.eventCommands.push(cmd);
       }
@@ -96,18 +91,14 @@ function load(commandsDir, goatCmdMap) {
 
   return count;
 }
-
 function _isGoatBotCommand(cmd) {
   if (!cmd || typeof cmd !== "object") return false;
   return typeof cmd.onStart === "function";
 }
-
 function _isNativeCommand(cmd) {
   if (!cmd || typeof cmd !== "object") return false;
   return typeof cmd.run === "function" || typeof cmd.execute === "function";
 }
-
-
 /**
  * @param {Object} goatCmd
  * @returns {Object} compatible command object
@@ -117,10 +108,10 @@ function _wrapAsNative(goatCmd) {
 
   return {
     config: {
-      name: cmdName,
-      aliases: goatCmd.config.aliases   || [],
-      role: goatCmd.config.role      ?? 0,
-      cooldown: goatCmd.config.countDown ?? 3,
+      name:       cmdName,
+      aliases:    goatCmd.config.aliases   || [],
+      role:       goatCmd.config.role      ?? 0,
+      cooldown:   goatCmd.config.countDown ?? 3,
       category:   goatCmd.config.category  || "goatbot",
       nsfw:       goatCmd.config.nsfw      || false,
       nonPrefix:  goatCmd.config.nonPrefix || false,
@@ -137,14 +128,14 @@ function _wrapAsNative(goatCmd) {
         args,
         message,
         getLang,
-        prefix: prefix || global.getPrefix(event.threadID),
-        usersData: global.GoatBot.usersData,
-        threadsData: global.GoatBot.threadsData,
+        prefix:        prefix || global.getPrefix(event.threadID),
+        usersData:     global.GoatBot.usersData,
+        threadsData:   global.GoatBot.threadsData,
         dashBoardData: global.GoatBot.dashBoardData,
         commandName:   cmdName,
-        role: goatCmd.config.role ?? 0,
-        envCommands:global.GoatBot.commands,
-        envEvents: global.GoatBot.eventCommands,
+        role:          goatCmd.config.role ?? 0,
+        envCommands:   global.GoatBot.commands,
+        envEvents:     global.GoatBot.eventCommands,
       });
     },
     onReply:     goatCmd.onReply     || null,
