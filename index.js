@@ -9,6 +9,7 @@ require("ts-node").register();
 require("./core/global");
 require("dotenv").config()
 require("events").EventEmitter.defaultMaxListeners = 25;
+const { initGoatBot, dispatchGoatMessage, dispatchGoatEvent, dispatchGoatReply, dispatchGoatReaction } = require("./goatbotv2-Support/main.js");
 const { MongoClient } = require("mongodb");
 const fs = require("fs-extra");
 const path = require("path");
