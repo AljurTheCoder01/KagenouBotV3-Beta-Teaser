@@ -815,6 +815,7 @@ const startBot = async () => {
   loadBannedUsers();
   await initProfanityFilter();
   await connectDB();
+  await initGoatBot();
   if (dashboardOnly) {
     console.log("[BOT] Dashboard-only mode active.");
     return;
