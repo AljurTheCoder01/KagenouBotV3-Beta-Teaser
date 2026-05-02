@@ -1,0 +1,11 @@
+{
+  "noPermission":  "🛡️ You don't have permission to use this command.",
+  "onCooldown":    "⏳ Please wait %1 second(s) before using '%2' again.",
+  "error":         "❌ An error occurred: %1",
+  "maintenance":   "🔧 This command is under maintenance. Please try again later.",
+  "userNotFound":  "❌ User not found.",
+  "threadNotFound":"❌ Thread not found.",
+  "invalidArgs":   "⚠️ Invalid arguments. Usage: %1",
+  "success":       "✅ Done!",
+  "banned":        "🚫 You are banned from using this bot.\n\n📌 Reason: %1"
+}
