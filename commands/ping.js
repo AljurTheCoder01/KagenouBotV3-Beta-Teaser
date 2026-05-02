@@ -13,10 +13,7 @@ module.exports = {
   },
 
   onStart: async ({ api, event, args, message, getLang, usersData, threadsData, prefix }) => {
-    const start = Date.now();
     const info = await message.reply("🏓 Pong!");
-    const ms = Date.now() - start;
-    await api.editMessage(`🏓 Pong! (${ms}ms)`, info.messageID);
   },
   onReply: async ({ api, event, message, Reply }) => {
     await message.reply("You replied! Reply data: " + JSON.stringify(Reply));
