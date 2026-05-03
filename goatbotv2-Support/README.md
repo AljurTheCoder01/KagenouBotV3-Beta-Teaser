@@ -1,6 +1,6 @@
 # GoatBot V2 Integration Layer
 
-**📌Currently, only 60% of Goatbot v2’s functions and logic are integrated into this bot file. Full integration will be completed soon.**
+**📌Currently, only 45% of Goatbot v2’s functions and logic are integrated into this bot file. Full integration will be completed soon.**
 
 This folder (`goatbot/`) is a **compatibility bridge** that lets you drop any
 [GoatBot V2](https://github.com/ntkhang03/Goat-Bot-V2) command or event script
