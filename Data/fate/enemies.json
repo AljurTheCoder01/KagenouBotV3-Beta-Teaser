@@ -1,0 +1,14 @@
+[
+  { "name": "Shadow Assassin",        "atk": 800,   "def": 600,  "expReward": 120,  "coinReward": 80   },
+  { "name": "Corrupted Lancer",       "atk": 1200,  "def": 800,  "expReward": 180,  "coinReward": 120  },
+  { "name": "Rogue Berserker",        "atk": 2000,  "def": 500,  "expReward": 250,  "coinReward": 180  },
+  { "name": "Ancient Golem",          "atk": 1500,  "def": 2000, "expReward": 300,  "coinReward": 200  },
+  { "name": "Wraith Knight",          "atk": 2500,  "def": 1200, "expReward": 350,  "coinReward": 250  },
+  { "name": "Demonic Caster",         "atk": 1800,  "def": 900,  "expReward": 400,  "coinReward": 300  },
+  { "name": "Singularity Remnant",    "atk": 3000,  "def": 2000, "expReward": 500,  "coinReward": 400  },
+  { "name": "Fallen Paladin",         "atk": 3500,  "def": 2500, "expReward": 600,  "coinReward": 500  },
+  { "name": "Cursed Rider",           "atk": 4000,  "def": 3000, "expReward": 750,  "coinReward": 600  },
+  { "name": "Phantasmal Beast",       "atk": 6000,  "def": 4000, "expReward": 1000, "coinReward": 800  },
+  { "name": "Divine Spirit Fragment", "atk": 8000,  "def": 5000, "expReward": 1500, "coinReward": 1200 },
+  { "name": "Beast of Alaya",         "atk": 12000, "def": 8000, "expReward": 2500, "coinReward": 2000 }
+]
