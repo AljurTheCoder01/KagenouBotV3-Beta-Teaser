@@ -1,0 +1,15 @@
+[
+  { "id": "first_summoning", "label": "✨ Newly Summoned",      "how": "Complete registration"               },
+  { "id": "grail_seeker",    "label": "🏆 Grail Seeker",        "how": "Obtain your first Holy Grail"        },
+  { "id": "grail_king",      "label": "👑 Grail King",           "how": "Obtain 10 Holy Grails"               },
+  { "id": "singularity_1",   "label": "⚔️ Fuyuki Survivor",     "how": "Clear Fuyuki Singularity"            },
+  { "id": "singularity_7",   "label": "🌟 Grand Order Complete", "how": "Clear all 8 Singularities"          },
+  { "id": "bond_master",     "label": "💫 Bond Master",          "how": "Reach Bond Level 10"                 },
+  { "id": "battle_veteran",  "label": "🗡️ Battle Veteran",       "how": "Win 100 battles"                     },
+  { "id": "np_unleashed",    "label": "💥 NP Unleashed",         "how": "Unleash your Noble Phantasm 10 times"},
+  { "id": "streak_hero",     "label": "🔥 Streak Hero",          "how": "7-day daily login streak"            },
+  { "id": "chaldea_founder", "label": "🏰 Chaldea Founder",      "how": "Create a Chaldea"                    },
+  { "id": "duel_champion",   "label": "⚡ Duel Champion",        "how": "Win 20 servant duels"                },
+  { "id": "weapon_master",   "label": "🔱 Weapon Master",        "how": "Max upgrade any weapon"              },
+  { "id": "xxsr_holder",     "label": "🌌 King of Heroes",       "how": "Obtain an XXSR servant card"         }
+]
