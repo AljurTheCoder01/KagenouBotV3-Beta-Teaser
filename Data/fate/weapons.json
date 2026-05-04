@@ -1,0 +1,22 @@
+{
+  "W001": { "name": "Iron Sword",           "cost": 500,    "atkBonus": 50,    "defBonus": 0,     "manaBonus": 0,    "effect": "Basic iron sword" },
+  "W002": { "name": "Bronze Spear",         "cost": 800,    "atkBonus": 70,    "defBonus": 0,     "manaBonus": 0,    "effect": "Light throwing spear" },
+  "W003": { "name": "Silver Bow",           "cost": 1200,   "atkBonus": 90,    "defBonus": 0,     "manaBonus": 20,   "effect": "Magical silver arrows" },
+  "W004": { "name": "Mithril Blade",        "cost": 2500,   "atkBonus": 150,   "defBonus": 30,    "manaBonus": 0,    "effect": "+30 DEF on equip" },
+  "W005": { "name": "Runic Dagger",         "cost": 3500,   "atkBonus": 180,   "defBonus": 0,     "manaBonus": 50,   "effect": "Rune-etched for mana conductance" },
+  "W006": { "name": "Shadow Lance",         "cost": 5000,   "atkBonus": 250,   "defBonus": 0,     "manaBonus": 0,    "effect": "Forged from shadow iron" },
+  "W007": { "name": "Celestial Staff",      "cost": 6000,   "atkBonus": 100,   "defBonus": 50,    "manaBonus": 200,  "effect": "Amplifies Caster spells" },
+  "W008": { "name": "Dragonbone Axe",       "cost": 7500,   "atkBonus": 350,   "defBonus": 0,     "manaBonus": 0,    "effect": "Carved from dragon remains" },
+  "W009": { "name": "Knight's Longsword",   "cost": 9000,   "atkBonus": 400,   "defBonus": 80,    "manaBonus": 0,    "effect": "Noble Knight heirloom" },
+  "W010": { "name": "Void Quiver",          "cost": 10000,  "atkBonus": 420,   "defBonus": 0,     "manaBonus": 100,  "effect": "Arrows never miss at close range" },
+  "W011": { "name": "Mystic Grimoire",      "cost": 12000,  "atkBonus": 200,   "defBonus": 100,   "manaBonus": 400,  "effect": "Ancient spell compendium" },
+  "W012": { "name": "Caladbolg",            "cost": 15000,  "atkBonus": 600,   "defBonus": 100,   "manaBonus": 0,    "effect": "Spiral sword of Irish legend" },
+  "W013": { "name": "Fragarach",            "cost": 18000,  "atkBonus": 700,   "defBonus": 150,   "manaBonus": 0,    "effect": "The Retaliator — counters any blow" },
+  "W014": { "name": "Arondight",            "cost": 22000,  "atkBonus": 850,   "defBonus": 200,   "manaBonus": 50,   "effect": "Lancelot's holy sword" },
+  "W015": { "name": "Durandal",             "cost": 25000,  "atkBonus": 950,   "defBonus": 250,   "manaBonus": 0,    "effect": "Unbreakable paladin sword" },
+  "W016": { "name": "Rhongomyniad",         "cost": 30000,  "atkBonus": 1100,  "defBonus": 300,   "manaBonus": 100,  "effect": "Knights of the Round Table spear" },
+  "W017": { "name": "Gate of Babylon Key",  "cost": 40000,  "atkBonus": 1500,  "defBonus": 500,   "manaBonus": 500,  "effect": "Opens the treasury of heroes" },
+  "W018": { "name": "Ea (Partial)",         "cost": 60000,  "atkBonus": 2500,  "defBonus": 800,   "manaBonus": 800,  "effect": "Fragment of the sword of rupture" },
+  "W019": { "name": "Avalon Scabbard",      "cost": 80000,  "atkBonus": 1000,  "defBonus": 3000,  "manaBonus": 1000, "effect": "Legendary scabbard, near-immortality" },
+  "W020": { "name": "Ea (True Form)",       "cost": 500000, "atkBonus": 15000, "defBonus": 5000,  "manaBonus": 5000, "effect": "The Sword That Cleaved the World" }
+}
