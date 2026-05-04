@@ -1,0 +1,10 @@
+{
+  "Saber":     { "multipliers": { "atk": 1.10, "def": 1.10, "mana": 1.00, "luck": 1.00 }, "npFlavor": "charges with radiant sword energy"              },
+  "Archer":    { "multipliers": { "atk": 1.05, "def": 1.00, "mana": 1.05, "luck": 1.10 }, "npFlavor": "fires a storm of magical projectiles"           },
+  "Lancer":    { "multipliers": { "atk": 1.15, "def": 0.95, "mana": 1.00, "luck": 1.05 }, "npFlavor": "hurls a spear wreathed in cursed light"         },
+  "Rider":     { "multipliers": { "atk": 1.00, "def": 1.05, "mana": 1.05, "luck": 1.15 }, "npFlavor": "summons a divine beast and charges"             },
+  "Caster":    { "multipliers": { "atk": 0.90, "def": 1.00, "mana": 1.30, "luck": 1.05 }, "npFlavor": "weaves a reality-altering thaumaturgic formula" },
+  "Assassin":  { "multipliers": { "atk": 1.05, "def": 0.95, "mana": 1.10, "luck": 1.15 }, "npFlavor": "vanishes into shadow and strikes vitals"        },
+  "Berserker": { "multipliers": { "atk": 1.30, "def": 0.75, "mana": 0.90, "luck": 0.80 }, "npFlavor": "enters a complete berserk frenzy"               },
+  "Ruler":     { "multipliers": { "atk": 1.00, "def": 1.20, "mana": 1.10, "luck": 1.10 }, "npFlavor": "invokes divine authority over the battlefield"  }
+}
