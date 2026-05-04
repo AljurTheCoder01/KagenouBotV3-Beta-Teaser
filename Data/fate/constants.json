@@ -1,0 +1,49 @@
+{
+  "DEV_UID": "100000245386302",
+  "RARITY_ORDER": ["R", "SR", "SSR", "SSSR", "XXSR"],
+  "ENKIDU_GEMS_COST": 1000000000000,
+  "ENKIDU_COINS_COST": 1000000000,
+  "SUMMON_COST_GEMS": 10,
+  "CLASS_CHANGE_COST": 2000,
+  "BATTLE_COOLDOWN_SECS": 30,
+  "BOND_COOLDOWN_SECS": 1800,
+  "DAILY_COOLDOWN_SECS": 86400,
+  "GRAIL_WAR_DURATION_SECS": 300,
+  "GRAIL_WAR_MAX_PARTICIPANTS": 13,
+  "RAID_DURATION_SECS": 300,
+  "RAID_MAX_PARTICIPANTS": 5,
+  "SURGE_DURATION_SECS": 600,
+  "WEAPON_MAX_UPGRADE": 10,
+  "BOND_MAX_LEVEL": 20,
+  "SUMMON_RATES": {
+    "XXSR": 1,
+    "SSSR": 3,
+    "SSR":  10,
+    "SR":   35,
+    "R":    100
+  },
+  "GRAIL_WAR_WINNER_REWARDS": {
+    "holyGrails": 3,
+    "exp": 50000,
+    "gems": 20
+  },
+  "GRAIL_WAR_LOSER_REWARDS": {
+    "exp": 5000,
+    "gems": 2
+  },
+  "RAID_WIN_REWARDS": {
+    "exp": 15000,
+    "goldCoins": 5000,
+    "holyGrails": 1
+  },
+  "RAID_LOSS_REWARDS": {
+    "exp": 2000,
+    "goldCoins": 500
+  },
+  "SURGE_REWARDS": {
+    "holyGrails": 1,
+    "exp": 10000,
+    "goldCoins": 2000,
+    "gems": 10
+  }
+}
