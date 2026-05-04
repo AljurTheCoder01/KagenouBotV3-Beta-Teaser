@@ -1,0 +1,12 @@
+{
+  "P001": { "name": "Minor Mana Prism",     "cost": 200,   "effect": "+20 Mana",                "statBoost": { "mana": 20 } },
+  "P002": { "name": "Battle Tonic",         "cost": 350,   "effect": "+30 ATK",                 "statBoost": { "atk": 30 } },
+  "P003": { "name": "Iron Flesh Draught",   "cost": 350,   "effect": "+30 DEF",                 "statBoost": { "def": 30 } },
+  "P004": { "name": "Fortune Elixir",       "cost": 500,   "effect": "+25 Luck",                "statBoost": { "luck": 25 } },
+  "P005": { "name": "Greater Mana Vial",    "cost": 800,   "effect": "+100 Mana",               "statBoost": { "mana": 100 } },
+  "P006": { "name": "Berserker's Rage",     "cost": 1000,  "effect": "+150 ATK, -50 DEF",       "statBoost": { "atk": 150, "def": -50 } },
+  "P007": { "name": "NP Charge Potion",     "cost": 1500,  "effect": "+25 NP Charge",           "npBoost": 25 },
+  "P008": { "name": "Grail Fragment Tonic", "cost": 5000,  "effect": "+500 to all stats",       "statBoost": { "atk": 500, "def": 500, "mana": 500, "luck": 500 } },
+  "P009": { "name": "Command Seal Elixir",  "cost": 8000,  "effect": "Fully charges NP to 100", "npBoost": 100 },
+  "P010": { "name": "Heroic Essence",       "cost": 20000, "effect": "+2000 to all stats",      "statBoost": { "atk": 2000, "def": 2000, "mana": 2000, "luck": 2000 } }
+}
