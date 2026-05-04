@@ -1,0 +1,12 @@
+{
+  "SK01": { "name": "Mana Burst",          "description": "Infuse weapon with mana for +20% ATK in next battle",  "cost": 3000,  "unlockReq": "Level 10", "effect": "atk_burst"       },
+  "SK02": { "name": "Eye of the Mind",     "description": "Predict enemy attacks — +15% dodge chance",            "cost": 4000,  "unlockReq": "Level 15", "effect": "dodge_boost"     },
+  "SK03": { "name": "Instinct",            "description": "Raise NP charge rate by 10% per battle",               "cost": 5000,  "unlockReq": "Level 20", "effect": "np_regen"        },
+  "SK04": { "name": "Charisma",            "description": "Chaldea allies gain +10% power in raids",              "cost": 6000,  "unlockReq": "Level 25", "effect": "raid_aura"       },
+  "SK05": { "name": "Battle Continuation", "description": "Survive one killing blow per dungeon",                 "cost": 8000,  "unlockReq": "Level 30", "effect": "survive_once"    },
+  "SK06": { "name": "Divinity",            "description": "+10% damage vs divine enemies",                        "cost": 10000, "unlockReq": "Level 35", "effect": "divine_slayer"   },
+  "SK07": { "name": "Magic Resistance",    "description": "Reduce Caster enemy damage by 25%",                    "cost": 12000, "unlockReq": "Level 40", "effect": "anti_caster"     },
+  "SK08": { "name": "Independent Action",  "description": "Battle without cooldown once every 12 hours",          "cost": 15000, "unlockReq": "Level 50", "effect": "cooldown_bypass" },
+  "SK09": { "name": "Transformation",      "description": "Change servant class once per day",                    "cost": 20000, "unlockReq": "Level 60", "effect": "class_change"    },
+  "SK10": { "name": "Heroic Spirit Core",  "description": "All stats +25% permanently",                           "cost": 50000, "unlockReq": "Level 80", "effect": "stat_amplify"    }
+}
