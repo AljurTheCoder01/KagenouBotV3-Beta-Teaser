@@ -1,0 +1,10 @@
+[
+  { "id": 0, "name": "Fuyuki",    "boss": "Saber Alter",          "bossAtk": 8000,   "expReward": 1000,  "coinsReward": 500   },
+  { "id": 1, "name": "Orleans",   "boss": "Jeanne Alter",         "bossAtk": 12000,  "expReward": 2000,  "coinsReward": 1000  },
+  { "id": 2, "name": "Septem",    "boss": "Romulus",              "bossAtk": 18000,  "expReward": 3500,  "coinsReward": 2000  },
+  { "id": 3, "name": "Okeanos",   "boss": "Blackbeard",           "bossAtk": 25000,  "expReward": 5000,  "coinsReward": 3500  },
+  { "id": 4, "name": "London",    "boss": "Nikola Tesla (Enemy)", "bossAtk": 35000,  "expReward": 8000,  "coinsReward": 5000  },
+  { "id": 5, "name": "Camelot",   "boss": "Ozymandias (Enemy)",   "bossAtk": 50000,  "expReward": 12000, "coinsReward": 8000  },
+  { "id": 6, "name": "Babylonia", "boss": "Tiamat",               "bossAtk": 75000,  "expReward": 20000, "coinsReward": 12000 },
+  { "id": 7, "name": "Solomon",   "boss": "Goetia",               "bossAtk": 120000, "expReward": 50000, "coinsReward": 30000 }
+]
