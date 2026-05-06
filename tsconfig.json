@@ -16,7 +16,18 @@
     "noImplicitAny": false,
     "baseUrl": "./",
     "paths": {
-      "@aurora/styler": ["./core/plugins/aurora-beta-styler"]
+      "@aurora/styler": ["./core/plugins/aurora-beta-styler"],
+      "@fate/servants": ["./data/fate/servants.json"],
+      "@fate/heroes": ["./data/fate/heroes.json"],
+      "@fate/weapons": ["./data/fate/weapons.json"],
+      "@fate/potions": ["./data/fate/potions.json"],
+      "@fate/skills": ["./data/fate/skills.json"],
+      "@fate/shop": ["./data/fate/shop.json"],
+      "@fate/singularities": ["./data/fate/singularities.json"],
+      "@fate/enemies": ["./data/fate/enemies.json"],
+      "@fate/titles": ["./data/fate/titles.json"],
+      "@fate/classes": ["./data/fate/classes.json"],
+      "@fate/constants": ["./data/fate/constants.json"]
     }
   },
   "include": ["**/*.ts", "**/*.js", "global.ts"],
