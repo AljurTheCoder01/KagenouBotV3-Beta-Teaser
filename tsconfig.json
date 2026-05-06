@@ -17,17 +17,17 @@
     "baseUrl": "./",
     "paths": {
       "@aurora/styler": ["./core/plugins/aurora-beta-styler"],
-      "@fate/servants": ["./data/fate/servants.json"],
-      "@fate/heroes": ["./data/fate/heroes.json"],
-      "@fate/weapons": ["./data/fate/weapons.json"],
-      "@fate/potions": ["./data/fate/potions.json"],
-      "@fate/skills": ["./data/fate/skills.json"],
-      "@fate/shop": ["./data/fate/shop.json"],
-      "@fate/singularities": ["./data/fate/singularities.json"],
-      "@fate/enemies": ["./data/fate/enemies.json"],
-      "@fate/titles": ["./data/fate/titles.json"],
-      "@fate/classes": ["./data/fate/classes.json"],
-      "@fate/constants": ["./data/fate/constants.json"]
+      "@fate/servants": ["./Data/fate/servants.json"],
+      "@fate/heroes": ["./Data/fate/heroes.json"],
+      "@fate/weapons": ["./Data/fate/weapons.json"],
+      "@fate/potions": ["./Data/fate/potions.json"],
+      "@fate/skills": ["./Data/fate/skills.json"],
+      "@fate/shop": ["./Data/fate/shop.json"],
+      "@fate/singularities": ["./Data/fate/singularities.json"],
+      "@fate/enemies": ["./Data/fate/enemies.json"],
+      "@fate/titles": ["./Data/fate/titles.json"],
+      "@fate/classes": ["./Data/fate/classes.json"],
+      "@fate/constants": ["./Data/fate/constants.json"]
     }
   },
   "include": ["**/*.ts", "**/*.js", "global.ts"],
