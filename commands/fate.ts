@@ -1,21 +1,21 @@
 import AuroraBetaStyler from "@aurora/styler";
-import SERVANT_POOL   from "../../data/fate/servants.json";
-import HEROES         from "../../data/fate/heroes.json";
-import WEAPON_ITEMS   from "../../data/fate/weapons.json";
-import POTION_ITEMS   from "../../data/fate/potions.json";
-import SKILL_DEFS     from "../../data/fate/skills.json";
-import SHOP_IDS       from "../../data/fate/shop.json";
+import SERVANT_POOL from "../../data/fate/servants.json";
+import HEROES from "../../data/fate/heroes.json";
+import WEAPON_ITEMS from "../../data/fate/weapons.json";
+import POTION_ITEMS from "../../data/fate/potions.json";
+import SKILL_DEFS from "../../data/fate/skills.json";
+import SHOP_IDS from "../../data/fate/shop.json";
 import SINGULARITIES  from "../../data/fate/singularities.json";
 import BATTLE_ENEMIES from "../../data/fate/enemies.json";
-import FATE_TITLES    from "../../data/fate/titles.json";
-import CLASS_DATA     from "../../data/fate/classes.json";
+import FATE_TITLES from "../../data/fate/titles.json";
+import CLASS_DATA from "../../data/fate/classes.json";
 import FATE_CONSTANTS from "../../data/fate/constants.json";
 
 const DEV_UID = FATE_CONSTANTS.DEV_UID;
 const RARITY_ORDER = FATE_CONSTANTS.RARITY_ORDER;
 const ENKIDU_GEMS_COST = FATE_CONSTANTS.ENKIDU_GEMS_COST;
 const ENKIDU_COINS_COST = FATE_CONSTANTS.ENKIDU_COINS_COST;
-const WEAPON_MAX_UPGRADE = FATE_CONSTANTS.WEAPON_MAX_UPGRADE;
+const WEAPON_MAX_UPGRADE  = FATE_CONSTANTS.WEAPON_MAX_UPGRADE;
 const BOND_MAX_LEVEL = FATE_CONSTANTS.BOND_MAX_LEVEL;
 
 const CLASS_MULTIPLIERS: Record<string, { atk: number; def: number; mana: number; luck: number }> =
