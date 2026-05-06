@@ -19,16 +19,16 @@ const WEAPON_MAX_UPGRADE  = FATE_CONSTANTS.WEAPON_MAX_UPGRADE;
 const BOND_MAX_LEVEL = FATE_CONSTANTS.BOND_MAX_LEVEL;
 
 const CLASS_MULTIPLIERS: Record<string, { atk: number; def: number; mana: number; luck: number }> =
-  Object.fromEntries(Object.entries(CLASS_DATA).map(([k, v]) => [k, v.multipliers]));
+  Object.fromEntries(Object.entries(CLASS_DATA as Record<string, any>).map(([k, v]) => [k, v.multipliers]));
 
 const CLASS_NP_FLAVOR: Record<string, string> =
-  Object.fromEntries(Object.entries(CLASS_DATA).map(([k, v]) => [k, v.npFlavor]));
+  Object.fromEntries(Object.entries(CLASS_DATA as Record<string, any>).map(([k, v]) => [k, v.npFlavor]));
 
 const HERO_IDS: Record<string, string> =
-  Object.fromEntries(Object.entries(HEROES).map(([id, h]) => [id, h.name]));
+  Object.fromEntries(Object.entries(HEROES as Record<string, any>).map(([id, h]) => [id, h.name]));
 
 const HERO_COSTS: Record<string, { gems: number; coins: number }> =
-  Object.fromEntries(Object.values(HEROES).map((h) => [h.name, { gems: h.gems, coins: h.coins }]));
+  Object.fromEntries(Object.values(HEROES as Record<string, any>).map((h) => [h.name, { gems: h.gems, coins: h.coins }]));
 
 interface ServantData {
   userID: string;
