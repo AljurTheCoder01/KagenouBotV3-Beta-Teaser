@@ -1,0 +1,279 @@
+[
+  {
+    "id": "C000", "name": "Aaron", "type": "Magic", "devOnly": true, "purchasable": false, "rarity": "XXSR",
+    "description": "The most powerful mage in all of Wistoria. Aaron, the absolute pinnacle. His power transcends all known limits.",
+    "baseStats": { "magicPower": 99999999, "magicPen": 99999999, "defense": 99999999, "luck": 99999999, "swordPower": 0, "speed": 0 },
+    "signature": "Absolute Magic — The power that defines the world", "origin": "Unknown", "pullable": false
+  },
+  {
+    "id": "C001", "name": "Will Serfort", "type": "SwordMagic", "devOnly": false, "purchasable": true,
+    "purchaseCost": { "silver": 750000, "gold": 0 }, "rarity": "XXSR",
+    "description": "The swordsman who aims to be Magia Vander without magic. The only character who wields both Sword and Wand.",
+    "baseStats": { "magicPower": 55000, "magicPen": 22000, "defense": 48000, "luck": 35000, "swordPower": 88000, "speed": 72000 },
+    "signature": "Absolute Sword & Wand — The impossible dual path", "origin": "Regarden Magic Academy", "pullable": false
+  },
+  {
+    "id": "C002", "name": "Elfaria", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "XXSR",
+    "description": "Daughter of the Magia Vander. Her magic is unmatched among all peers at Regarden.",
+    "baseStats": { "magicPower": 72000, "magicPen": 29000, "defense": 28000, "luck": 38000, "swordPower": 0, "speed": 0 },
+    "signature": "Divine Radiance — Supreme light-type magic", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C003", "name": "Lesedi Ingwe", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "One of the Five Wonders. A calm and devastating mage from the noble Ingwe family.",
+    "baseStats": { "magicPower": 62000, "magicPen": 25000, "defense": 26000, "luck": 30000, "swordPower": 0, "speed": 0 },
+    "signature": "Void Collapse — Space-rending magic", "origin": "Five Wonders", "pullable": true
+  },
+  {
+    "id": "C004", "name": "Coco Zenon", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "One of the Five Wonders. Fierce and explosive. Fire-type magic specialist.",
+    "baseStats": { "magicPower": 60000, "magicPen": 27000, "defense": 23000, "luck": 33000, "swordPower": 0, "speed": 0 },
+    "signature": "Inferno Burst — Explosive fire magic", "origin": "Five Wonders", "pullable": true
+  },
+  {
+    "id": "C005", "name": "Elna Calintz", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "Will's childhood friend. Ice-type affinity with strong defensive capabilities.",
+    "baseStats": { "magicPower": 46000, "magicPen": 18000, "defense": 28000, "luck": 26000, "swordPower": 0, "speed": 0 },
+    "signature": "Glacial Veil — Protective ice barrier", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C006", "name": "Gracier", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "One of the Five Wonders. Elegant wind-type magic that cuts like a razor.",
+    "baseStats": { "magicPower": 59000, "magicPen": 25000, "defense": 24000, "luck": 29000, "swordPower": 0, "speed": 0 },
+    "signature": "Tempest Edge — Razor wind slashes", "origin": "Five Wonders", "pullable": true
+  },
+  {
+    "id": "C007", "name": "Ottilie Puppel", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "One of the Five Wonders. Quiet but overwhelming magical output.",
+    "baseStats": { "magicPower": 61000, "magicPen": 26000, "defense": 22000, "luck": 27000, "swordPower": 0, "speed": 0 },
+    "signature": "Silent Annihilation — Soundless destruction magic", "origin": "Five Wonders", "pullable": true
+  },
+  {
+    "id": "C008", "name": "Olin Doal", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "One of the Five Wonders. Stoic and battle-hardened. Earth-type magic.",
+    "baseStats": { "magicPower": 58000, "magicPen": 23000, "defense": 36000, "luck": 23000, "swordPower": 0, "speed": 0 },
+    "signature": "Terra Crush — Seismic earth magic", "origin": "Five Wonders", "pullable": true
+  },
+  {
+    "id": "C009", "name": "Teoritta", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A divine-type mage with mysterious origins. Healing and support specialist.",
+    "baseStats": { "magicPower": 42000, "magicPen": 17000, "defense": 32000, "luck": 40000, "swordPower": 0, "speed": 0 },
+    "signature": "Sacred Blessing — Divine restoration magic", "origin": "Unknown", "pullable": true
+  },
+  {
+    "id": "C010", "name": "Leonis Creto", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A senior student known for aggressive combat magic.",
+    "baseStats": { "magicPower": 28000, "magicPen": 11000, "defense": 18000, "luck": 18000, "swordPower": 0, "speed": 0 },
+    "signature": "Lion's Roar — Shockwave pressure magic", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C011", "name": "Mira Valden", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A bookish student who excels in elemental theory.",
+    "baseStats": { "magicPower": 30000, "magicPen": 12000, "defense": 14000, "luck": 24000, "swordPower": 0, "speed": 0 },
+    "signature": "Formula Cascade — Multi-element combo", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C012", "name": "Duren Falke", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A merchant's son. Lightning-type affinity.",
+    "baseStats": { "magicPower": 27000, "magicPen": 12500, "defense": 18000, "luck": 21000, "swordPower": 0, "speed": 0 },
+    "signature": "Bolt Rush — Rapid lightning shots", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C013", "name": "Sonia Rael", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A quiet girl from the southern territories. Shadow affinity.",
+    "baseStats": { "magicPower": 16000, "magicPen": 7000, "defense": 12000, "luck": 15000, "swordPower": 0, "speed": 0 },
+    "signature": "Shade Step — Shadow movement and strike", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C014", "name": "Bram Torcel", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A big-hearted northerner. Ice and earth dual affinity.",
+    "baseStats": { "magicPower": 14000, "magicPen": 6000, "defense": 22000, "luck": 13000, "swordPower": 0, "speed": 0 },
+    "signature": "Frozen Ground — Ice-earth combination trap", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "C015", "name": "Aria Fennel", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A noble's daughter who enrolled for adventure. Wind affinity.",
+    "baseStats": { "magicPower": 15000, "magicPen": 6500, "defense": 14000, "luck": 20000, "swordPower": 0, "speed": 0 },
+    "signature": "Feather Storm — Rapid wind barrage", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N001", "name": "Kael Norwyn", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A first-year student still learning basic spell formulas.",
+    "baseStats": { "magicPower": 3000, "magicPen": 1200, "defense": 3500, "luck": 3000, "swordPower": 0, "speed": 0 },
+    "signature": "Spark Flare — Unstable fire burst", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N002", "name": "Lura Vessin", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A cheerful girl from the east district. Water-type beginner.",
+    "baseStats": { "magicPower": 3200, "magicPen": 1300, "defense": 3300, "luck": 3200, "swordPower": 0, "speed": 0 },
+    "signature": "Aqua Splash — Weak water scatter", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N003", "name": "Finn Drell", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "Average student. Reliable but unremarkable.",
+    "baseStats": { "magicPower": 2800, "magicPen": 1100, "defense": 3800, "luck": 2800, "swordPower": 0, "speed": 0 },
+    "signature": "Stone Pebble — Weak earth throw", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N004", "name": "Marlo Seit", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A nervous boy from a farming family. Wind beginner.",
+    "baseStats": { "magicPower": 2900, "magicPen": 1150, "defense": 3100, "luck": 3400, "swordPower": 0, "speed": 0 },
+    "signature": "Gust Puff — Weak wind gust", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N005", "name": "Tessa Brinn", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A girl who enrolled solely for the cafeteria food. Ice minor.",
+    "baseStats": { "magicPower": 2700, "magicPen": 1000, "defense": 3600, "luck": 3100, "swordPower": 0, "speed": 0 },
+    "signature": "Ice Chip — Tiny ice projectile", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N006", "name": "Ryden Holt", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "Second-year student known for speed-casting. Lightning minor.",
+    "baseStats": { "magicPower": 13000, "magicPen": 5800, "defense": 11000, "luck": 14000, "swordPower": 0, "speed": 0 },
+    "signature": "Quick Bolt — Fast lightning jab", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N007", "name": "Vera Lund", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A stoic girl from the northern mountains. Earth specialization.",
+    "baseStats": { "magicPower": 14500, "magicPen": 5500, "defense": 20000, "luck": 12000, "swordPower": 0, "speed": 0 },
+    "signature": "Rock Wall — Defensive stone barrier", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N008", "name": "Caius Fenmore", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A merchant's nephew. Fire-type hobbyist turned serious student.",
+    "baseStats": { "magicPower": 15500, "magicPen": 6800, "defense": 10500, "luck": 13500, "swordPower": 0, "speed": 0 },
+    "signature": "Ember Flick — Sustained fire stream", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N009", "name": "Rime Solvar", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A prodigy from the western city. Dual ice-wind affinity.",
+    "baseStats": { "magicPower": 25000, "magicPen": 10500, "defense": 16000, "luck": 19000, "swordPower": 0, "speed": 0 },
+    "signature": "Blizzard Gale — Ice-wind combo burst", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N010", "name": "Thorn Veskar", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "Intense third-year who trains relentlessly. Shadow-type.",
+    "baseStats": { "magicPower": 26000, "magicPen": 11200, "defense": 15000, "luck": 17000, "swordPower": 0, "speed": 0 },
+    "signature": "Dark Surge — Shadow power explosion", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N011", "name": "Lyria Moone", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A calm girl with an unusual affinity for moon-attributed light magic.",
+    "baseStats": { "magicPower": 29000, "magicPen": 11800, "defense": 13500, "luck": 22000, "swordPower": 0, "speed": 0 },
+    "signature": "Moonbeam Strike — Focused lunar light", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N012", "name": "Dax Croven", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A transfer student from a rival academy. Rumored to have trained under a Five Wonders graduate.",
+    "baseStats": { "magicPower": 40000, "magicPen": 16000, "defense": 22000, "luck": 20000, "swordPower": 0, "speed": 0 },
+    "signature": "Void Flare — Unstable null-element surge", "origin": "Rival Academy", "pullable": true
+  },
+  {
+    "id": "N013", "name": "Yuna Silthis", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "An elegant upperclassman with precise water and ice control.",
+    "baseStats": { "magicPower": 43000, "magicPen": 17500, "defense": 26000, "luck": 22000, "swordPower": 0, "speed": 0 },
+    "signature": "Tidal Freeze — Water that flash-freezes on contact", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N014", "name": "Eros Valeth", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A former street mage who clawed his way into the academy. Raw fire power.",
+    "baseStats": { "magicPower": 44000, "magicPen": 18000, "defense": 20000, "luck": 18000, "swordPower": 0, "speed": 0 },
+    "signature": "Scorched Path — Blazing trail of destruction", "origin": "Streets of the Capital", "pullable": true
+  },
+  {
+    "id": "N015", "name": "Nessa Dorn", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "Known for healing spells. Gentle and reliable.",
+    "baseStats": { "magicPower": 12000, "magicPen": 4500, "defense": 18000, "luck": 22000, "swordPower": 0, "speed": 0 },
+    "signature": "Gentle Mend — Minor healing aura", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N016", "name": "Crest Aldwin", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A noble's youngest son. Thunder affinity but lacks focus.",
+    "baseStats": { "magicPower": 13500, "magicPen": 6200, "defense": 10000, "luck": 14000, "swordPower": 0, "speed": 0 },
+    "signature": "Spark Jump — Erratic lightning arc", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N017", "name": "Pell Voras", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A background student who mostly sleeps in class.",
+    "baseStats": { "magicPower": 2500, "magicPen": 900, "defense": 3000, "luck": 4000, "swordPower": 0, "speed": 0 },
+    "signature": "Dreamy Flare — Accidental magic discharge", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N018", "name": "Wren Hallis", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A diligent but average student with no standout affinity.",
+    "baseStats": { "magicPower": 3100, "magicPen": 1100, "defense": 3400, "luck": 3300, "swordPower": 0, "speed": 0 },
+    "signature": "Neutral Bolt — Generic mana blast", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N019", "name": "Sol Karren", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "The academy librarian's son. Knows spell theory but struggles in practice.",
+    "baseStats": { "magicPower": 2600, "magicPen": 950, "defense": 2800, "luck": 3600, "swordPower": 0, "speed": 0 },
+    "signature": "Text Burst — Hurls enchanted books", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N020", "name": "Mace Torvell", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A brawler who channels magic through his fists instead of a wand.",
+    "baseStats": { "magicPower": 14000, "magicPen": 5000, "defense": 19000, "luck": 11000, "swordPower": 0, "speed": 0 },
+    "signature": "Magic Fist — Mana-infused punch", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N021", "name": "Zara Flint", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A sharp-tongued competitive student. Fire and shadow hybrid.",
+    "baseStats": { "magicPower": 27000, "magicPen": 12000, "defense": 14000, "luck": 16000, "swordPower": 0, "speed": 0 },
+    "signature": "Dark Ember — Shadow-infused fire projectile", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N022", "name": "Orin Gelth", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A laid-back genius who rarely shows his full power.",
+    "baseStats": { "magicPower": 31000, "magicPen": 13000, "defense": 12000, "luck": 20000, "swordPower": 0, "speed": 0 },
+    "signature": "Lazy Comet — Slow but devastating projectile", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N023", "name": "Hael Droven", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A battle-hardened student who spent a year exploring dungeons before enrolling.",
+    "baseStats": { "magicPower": 41000, "magicPen": 16500, "defense": 28000, "luck": 17000, "swordPower": 0, "speed": 0 },
+    "signature": "Dungeon Surge — Power honed underground", "origin": "Unknown", "pullable": true
+  },
+  {
+    "id": "N024", "name": "Celeste Morn", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A graceful mage from the royal city. Light-type with rare affinity.",
+    "baseStats": { "magicPower": 45000, "magicPen": 18500, "defense": 24000, "luck": 28000, "swordPower": 0, "speed": 0 },
+    "signature": "Holy Cascade — Cascading holy light rain", "origin": "Royal City", "pullable": true
+  },
+  {
+    "id": "N025", "name": "Ruin Valdris", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "A mysterious student whose past is unknown. Void-type affinity that unsettles everyone nearby.",
+    "baseStats": { "magicPower": 57000, "magicPen": 24000, "defense": 20000, "luck": 25000, "swordPower": 0, "speed": 0 },
+    "signature": "Void Presence — Passive void aura that weakens enemies", "origin": "Unknown", "pullable": true
+  },
+  {
+    "id": "N026", "name": "Irena Solmast", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSRX",
+    "description": "A legendary alumni who returned to teach. Her control of fire is legendary.",
+    "baseStats": { "magicPower": 63000, "magicPen": 26000, "defense": 22000, "luck": 28000, "swordPower": 0, "speed": 0 },
+    "signature": "Eternal Flame Dance — Undying fire spiral", "origin": "Regarden Alumni", "pullable": true
+  },
+  {
+    "id": "N027", "name": "Kross Emberveil", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "Common",
+    "description": "A first-year who got in through sheer stubbornness. No notable affinity.",
+    "baseStats": { "magicPower": 2400, "magicPen": 850, "defense": 2900, "luck": 2700, "swordPower": 0, "speed": 0 },
+    "signature": "Wild Flare — Uncontrolled mana burst", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N028", "name": "Thea Rindal", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "S",
+    "description": "A methodical student who logs every spell she casts. Water affinity.",
+    "baseStats": { "magicPower": 12500, "magicPen": 5200, "defense": 14000, "luck": 13500, "swordPower": 0, "speed": 0 },
+    "signature": "Data Stream — Calculated water precision", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N029", "name": "Darro Velt", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SS",
+    "description": "A boisterous third-year fond of showing off. Thunder and wind affinity.",
+    "baseStats": { "magicPower": 26500, "magicPen": 11500, "defense": 13500, "luck": 18500, "swordPower": 0, "speed": 0 },
+    "signature": "Thunder Wind Combo — Lightning-infused wind slash", "origin": "Regarden Magic Academy", "pullable": true
+  },
+  {
+    "id": "N030", "name": "Iva Crestmoor", "type": "Magic", "devOnly": false, "purchasable": false, "rarity": "SSR",
+    "description": "A student council member. Ice and light dual affinity.",
+    "baseStats": { "magicPower": 42000, "magicPen": 17000, "defense": 27000, "luck": 23000, "swordPower": 0, "speed": 0 },
+    "signature": "Frostlight Judgment — Ice-light combo attack", "origin": "Regarden Magic Academy", "pullable": true
+  }
+]
