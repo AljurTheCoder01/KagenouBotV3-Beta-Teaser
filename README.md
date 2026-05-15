@@ -2,6 +2,10 @@
   <img src="./utils/cyberpunk.gif" alt="Image description" />
 </p>
 
+<p align="center">
+  <video src="./dashboard/assets/Tikmate.io_7422515351830777094.mp4" width="700" controls></video>
+</p>
+
 
 # Official Version of KagenouBot ⚔️
 
@@ -11,7 +15,6 @@ Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Mess
 ![GitHub stars](https://img.shields.io/github/stars/aljurxdev/KagenouBot)
 ![GitHub forks](https://img.shields.io/github/forks/aljurxdev/KagenouBot)
 ![GitHub issues](https://img.shields.io/github/issues/aljurxdev/KagenouBot)
-
 
 # Introduce the contributors of our KagenouBot 
 
