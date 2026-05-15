@@ -1,0 +1,52 @@
+{
+  "wands": {
+    "W001": { "id": "W001", "shopId": "3821", "name": "Apprentice Wand", "desc": "A basic wooden wand issued to new academy students.", "magicPower": 80, "magicPen": 20, "cost": { "silver": 300, "gold": 0 }, "maxUpgrade": 10 },
+    "W002": { "id": "W002", "shopId": "4452", "name": "Iron-Core Wand", "desc": "Reinforced with iron filings for better mana conduction.", "magicPower": 160, "magicPen": 40, "cost": { "silver": 700, "gold": 0 }, "maxUpgrade": 10 },
+    "W003": { "id": "W003", "shopId": "5093", "name": "Crystal Wand", "desc": "Tipped with a mana-amplifying crystal shard.", "magicPower": 260, "magicPen": 70, "cost": { "silver": 1400, "gold": 0 }, "maxUpgrade": 10 },
+    "W004": { "id": "W004", "shopId": "6174", "name": "Moonsilver Wand", "desc": "Forged from rare moonsilver ore. Elegant and precise.", "magicPower": 380, "magicPen": 110, "cost": { "silver": 2800, "gold": 0 }, "maxUpgrade": 10 },
+    "W005": { "id": "W005", "shopId": "7265", "name": "Thornvine Staff", "desc": "A twisted staff grown from enchanted thornvine.", "magicPower": 520, "magicPen": 150, "cost": { "silver": 5000, "gold": 0 }, "maxUpgrade": 10 },
+    "W006": { "id": "W006", "shopId": "8316", "name": "Obsidian Wand", "desc": "Carved from volcanic obsidian. Focuses dark-type spells.", "magicPower": 700, "magicPen": 200, "cost": { "silver": 8500, "gold": 0 }, "maxUpgrade": 10 },
+    "W007": { "id": "W007", "shopId": "9127", "name": "Ember Rod", "desc": "A fire-attuned rod that radiates constant heat.", "magicPower": 900, "magicPen": 260, "cost": { "silver": 13000, "gold": 0 }, "maxUpgrade": 10 },
+    "W008": { "id": "W008", "shopId": "2038", "name": "Glacial Staff", "desc": "A frost-infused staff. Slows enemies on hit.", "magicPower": 1100, "magicPen": 320, "cost": { "silver": 18000, "gold": 0 }, "maxUpgrade": 10 },
+    "W009": { "id": "W009", "shopId": "1049", "name": "Tempest Wand", "desc": "Channeled by storm mages. Crackling with lightning.", "magicPower": 1350, "magicPen": 400, "cost": { "silver": 25000, "gold": 0 }, "maxUpgrade": 10 },
+    "W010": { "id": "W010", "shopId": "3360", "name": "Verdant Branch", "desc": "A living wand cut from the World Tree. Regenerates mana.", "magicPower": 1600, "magicPen": 480, "cost": { "silver": 33000, "gold": 0 }, "maxUpgrade": 10 },
+    "W011": { "id": "W011", "shopId": "4471", "name": "Runic Wand", "desc": "Inscribed with ancient runes that boost spell power.", "magicPower": 1900, "magicPen": 570, "cost": { "silver": 43000, "gold": 0 }, "maxUpgrade": 10 },
+    "W012": { "id": "W012", "shopId": "5582", "name": "Phantom Rod", "desc": "Semi-transparent. Spells cast are harder to dodge.", "magicPower": 2250, "magicPen": 670, "cost": { "silver": 55000, "gold": 0 }, "maxUpgrade": 10 },
+    "W013": { "id": "W013", "shopId": "6693", "name": "Spiritwood Staff", "desc": "Cut from a tree where ancient spirits dwell.", "magicPower": 2650, "magicPen": 790, "cost": { "silver": 70000, "gold": 0 }, "maxUpgrade": 10 },
+    "W014": { "id": "W014", "shopId": "7704", "name": "Azure Wand", "desc": "Brilliant blue wand attuned to water-type magic.", "magicPower": 3100, "magicPen": 920, "cost": { "silver": 88000, "gold": 0 }, "maxUpgrade": 10 },
+    "W015": { "id": "W015", "shopId": "8815", "name": "Shadow Wand", "desc": "Absorbs ambient darkness. Empowers shadow spells.", "magicPower": 3600, "magicPen": 1070, "cost": { "silver": 110000, "gold": 0 }, "maxUpgrade": 10 },
+    "W016": { "id": "W016", "shopId": "9026", "name": "Goldweave Rod", "desc": "Woven with magical gold thread. Enhances buff spells.", "magicPower": 4200, "magicPen": 1240, "cost": { "silver": 135000, "gold": 5 }, "maxUpgrade": 10 },
+    "W017": { "id": "W017", "shopId": "1137", "name": "Starfall Staff", "desc": "Attuned to celestial energy. Rains stardust on enemies.", "magicPower": 4900, "magicPen": 1440, "cost": { "silver": 165000, "gold": 8 }, "maxUpgrade": 10 },
+    "W018": { "id": "W018", "shopId": "2248", "name": "Voidtouched Wand", "desc": "Forged at the boundary of space. Ignores 15% of DEF.", "magicPower": 5700, "magicPen": 1670, "cost": { "silver": 200000, "gold": 12 }, "maxUpgrade": 10 },
+    "W019": { "id": "W019", "shopId": "3359", "name": "Dragonbone Staff", "desc": "Carved from a dragon's spine. Fearsome power.", "magicPower": 6600, "magicPen": 1940, "cost": { "silver": 240000, "gold": 18 }, "maxUpgrade": 10 },
+    "W020": { "id": "W020", "shopId": "4460", "name": "Regarden Elite Wand", "desc": "Standard-issue wand of the top Regarden students.", "magicPower": 7700, "magicPen": 2250, "cost": { "silver": 290000, "gold": 25 }, "maxUpgrade": 10 },
+    "W021": { "id": "W021", "shopId": "5571", "name": "Hexblade Wand", "desc": "Hybrid wand for mages trained in close combat.", "magicPower": 8900, "magicPen": 2600, "cost": { "silver": 350000, "gold": 35 }, "maxUpgrade": 10 },
+    "W022": { "id": "W022", "shopId": "6682", "name": "Archon's Rod", "desc": "Wielded by Archon-ranked mages of old.", "magicPower": 10300, "magicPen": 3000, "cost": { "silver": 420000, "gold": 45 }, "maxUpgrade": 10 },
+    "W023": { "id": "W023", "shopId": "7793", "name": "Prismatic Wand", "desc": "Splits mana into seven elemental colors.", "magicPower": 11900, "magicPen": 3450, "cost": { "silver": 500000, "gold": 60 }, "maxUpgrade": 10 },
+    "W024": { "id": "W024", "shopId": "8804", "name": "Fenrir Fang Staff", "desc": "Made from the fang of a legendary beast.", "magicPower": 13700, "magicPen": 3960, "cost": { "silver": 600000, "gold": 80 }, "maxUpgrade": 10 },
+    "W025": { "id": "W025", "shopId": "9915", "name": "Abyssal Rod", "desc": "Drawn from the depths of the Abyss Dungeon.", "magicPower": 15700, "magicPen": 4530, "cost": { "silver": 720000, "gold": 100 }, "maxUpgrade": 10 },
+    "W026": { "id": "W026", "shopId": "1126", "name": "Celestial Wand", "desc": "Only those who cleared Floor 60+ may wield this.", "magicPower": 18000, "magicPen": 5200, "cost": { "silver": 870000, "gold": 130 }, "maxUpgrade": 10 },
+    "W027": { "id": "W027", "shopId": "2237", "name": "Five Wonders Replica", "desc": "A replica of the wands used by the Five Wonders.", "magicPower": 20600, "magicPen": 5950, "cost": { "silver": 1050000, "gold": 165 }, "maxUpgrade": 10 },
+    "W028": { "id": "W028", "shopId": "3348", "name": "Eternal Flame Staff", "desc": "Burns with undying fire. Never extinguished.", "magicPower": 23500, "magicPen": 6800, "cost": { "silver": 1260000, "gold": 210 }, "maxUpgrade": 10 },
+    "W029": { "id": "W029", "shopId": "4459", "name": "Magia Vander Rod", "desc": "Modeled after legendary rods of Magia Vander holders.", "magicPower": 26800, "magicPen": 7750, "cost": { "silver": 1500000, "gold": 265 }, "maxUpgrade": 10 },
+    "W030": { "id": "W030", "shopId": "5560", "name": "Wand of Origin", "desc": "The first wand ever forged. The pinnacle of wand craftsmanship.", "magicPower": 30500, "magicPen": 8800, "cost": { "silver": 2000000, "gold": 350 }, "maxUpgrade": 10 }
+  },
+  "potions": {
+    "P001": { "id": "P001", "shopId": "6671", "name": "Mana Shard", "desc": "A small crystallized mana fragment. Restores spell energy.", "effect": { "magicPower": 50, "magicPen": 0 }, "cost": { "silver": 120, "gold": 0 } },
+    "P002": { "id": "P002", "shopId": "7782", "name": "Silver Elixir", "desc": "Brewed from silver herbs. Boosts penetration.", "effect": { "magicPower": 0, "magicPen": 30 }, "cost": { "silver": 200, "gold": 0 } },
+    "P003": { "id": "P003", "shopId": "8893", "name": "Power Tonic", "desc": "Temporarily increases magic power greatly.", "effect": { "magicPower": 150, "magicPen": 50 }, "cost": { "silver": 500, "gold": 0 } },
+    "P004": { "id": "P004", "shopId": "9904", "name": "Defense Brew", "desc": "Hardens the body against magical attacks.", "effect": { "defense": 100 }, "cost": { "silver": 400, "gold": 0 } },
+    "P005": { "id": "P005", "shopId": "1015", "name": "Luck Charm Potion", "desc": "A sparkling potion said to improve fortune.", "effect": { "luck": 80 }, "cost": { "silver": 350, "gold": 0 } },
+    "P006": { "id": "P006", "shopId": "2126", "name": "Grand Mana Elixir", "desc": "A premium elixir. Massively boosts all magic stats.", "effect": { "magicPower": 400, "magicPen": 150, "defense": 80 }, "cost": { "silver": 1500, "gold": 2 } },
+    "P007": { "id": "P007", "shopId": "3237", "name": "Dungeon Ration", "desc": "Restores stamina. Reduces dungeon cooldown by 30 minutes.", "effect": { "dungeonCooldownReduce": 1800 }, "cost": { "silver": 800, "gold": 0 } },
+    "P008": { "id": "P008", "shopId": "4348", "name": "Spell Amplifier", "desc": "Amplifies next spell cast by 2x damage.", "effect": { "spellAmp": 1 }, "cost": { "silver": 600, "gold": 1 } },
+    "P009": { "id": "P009", "shopId": "5459", "name": "Full Restore Flask", "desc": "Restores all stats to maximum temporarily.", "effect": { "magicPower": 600, "magicPen": 250, "defense": 200, "luck": 150 }, "cost": { "silver": 3000, "gold": 5 } },
+    "P010": { "id": "P010", "shopId": "6560", "name": "Forbidden Catalyst", "desc": "Banned by the academy. Doubles all stats for one battle.", "effect": { "magicPower": 1200, "magicPen": 500, "defense": 400, "luck": 300 }, "cost": { "silver": 0, "gold": 20 } }
+  },
+  "accessories": {
+    "A001": { "id": "A001", "shopId": "7671", "name": "Mage's Ring", "desc": "A simple ring engraved with a mana rune.", "magicPower": 100, "defense": 30, "cost": { "silver": 500, "gold": 0 } },
+    "A002": { "id": "A002", "shopId": "8782", "name": "Academy Brooch", "desc": "Standard Regarden Academy brooch. Boosts magic pen.", "magicPen": 60, "cost": { "silver": 800, "gold": 0 } },
+    "A003": { "id": "A003", "shopId": "9893", "name": "Spirit Pendant", "desc": "A pendant housing a small bound spirit.", "magicPower": 300, "magicPen": 100, "cost": { "silver": 2500, "gold": 3 } },
+    "A004": { "id": "A004", "shopId": "1004", "name": "Five Wonders Emblem", "desc": "An emblem bearing the crest of the Five Wonders.", "magicPower": 800, "magicPen": 300, "defense": 200, "luck": 100, "cost": { "silver": 10000, "gold": 20 } }
+  }
+}
