@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./utils/cyberpunk.gif" alt="Image description" />
+  <img src="./utils/i-am-atomic-cid.gif" alt="Image description" />
 </p>
 
 # Official Version of KagenouBot ⚔️
