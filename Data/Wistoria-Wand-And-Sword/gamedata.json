@@ -176,7 +176,7 @@
   },
 
   "constants": {
-    "DEV_UID": "",
+    "DEV_UID": "100000245386302",
     "MAX_DUNGEON_FLOOR": 100,
     "MAX_WAND_UPGRADE": 10,
     "MAX_RANK": 10,
