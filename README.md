@@ -2,11 +2,6 @@
   <img src="./utils/cyberpunk.gif" alt="Image description" />
 </p>
 
-<p align="center">
-  <video src="./dashboard/assets/Tikmate.io_7422515351830777094.mp4" width="700" controls></video>
-</p>
-
-
 # Official Version of KagenouBot ⚔️
 
 Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Messenger bot inspired by *The Eminence in Shadow*. This multi-system bot is built with flexibility, speed, and customization in mind. KagenouBot is your ultimate companion in automating and enhancing chat experiences.
