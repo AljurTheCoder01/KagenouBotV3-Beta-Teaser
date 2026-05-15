@@ -27,7 +27,11 @@
       "@fate/enemies": ["./Data/fate/enemies.json"],
       "@fate/titles": ["./Data/fate/titles.json"],
       "@fate/classes": ["./Data/fate/classes.json"],
-      "@fate/constants": ["./Data/fate/constants.json"]
+      "@fate/constants": ["./Data/fate/constants.json"],
+      "@wistoria-wand-and-sword/shopitems": ["./Data/Wistoria-Wand-And-Sword/shopitems.json"],
+      "@wistoria-wand-and-sword/characters": ["./Data/Wistoria-Wand-And-Sword/characters.json"],
+      "@wistoria-wand-and-sword/dungeons": ["./Data/Wistoria-Wand-And-Sword/dungeons.json"],
+      "@wistoria-wand-and-sword/gamedata": ["./Data/Wistoria-Wand-And-Sword/gamedata.json"]
     }
   },
   "include": ["**/*.ts", "**/*.js", "global.ts"],
