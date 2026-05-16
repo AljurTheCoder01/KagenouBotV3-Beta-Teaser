@@ -31,6 +31,16 @@ Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Mess
 
 ---
 
+# KagenouBot Dashboard APK.
+- You can download here
+<p align="center">
+  <a href="https://github.com/aljurxdev/KagenouBot/releases/latest">
+    <img src="https://img.shields.io/badge/Download-APK-green?style=for-the-badge" />
+  </a>
+</p>
+
+---
+
 
 ## Introduction: The Seven Shadows
 
@@ -208,6 +218,7 @@ Aljur Pogoy / GeoArchonsTeam / Cassidy-Team
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software to use, copy, modify, distribute, and publish as needed.
 ```
+
 
 ---
 
