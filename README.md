@@ -32,7 +32,7 @@ Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Mess
 ---
 
 # KagenouBot Dashboard APK.
-- You can download here
+- Version 12.0.0.
 <p align="center">
   <a href="https://github.com/aljurxdev/KagenouBot/releases/latest">
     <img src="https://img.shields.io/badge/Download-APK-green?style=for-the-badge" />
