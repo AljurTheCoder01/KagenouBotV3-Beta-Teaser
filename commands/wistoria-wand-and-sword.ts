@@ -10,7 +10,7 @@ const ACCESSORIES = (SHOP_DATA as any).accessories;
 const SPELLS = (GAME_DATA as any).spells;
 const TITLES = (GAME_DATA as any).titles as any[];
 const RANKS = (GAME_DATA as any).ranks as any[];
-const QUESTS_DEF  = (GAME_DATA as any).quests;
+const QUESTS_DEF = (GAME_DATA as any).quests;
 const C = (GAME_DATA as any).constants;
 
 const DEV_UID: string = C.DEV_UID;
@@ -27,7 +27,7 @@ const SURGE_DURATION: number = C.SURGE_DURATION_SECS;
 const PARTY_MAX: number = C.PARTY_MAX_MEMBERS;
 const GOLD_DROP_CHANCE: number = C.GOLD_DROP_CHANCE;
 const EXP_PER_LEVEL: number = C.EXP_PER_LEVEL;
-const RARITY_ORDER: string[] = C.RARITY_ORDER;
+const RARITY_ORDER: string[] = C.RARITY_ORDER;;
 
 const activeParties = new Map<string, {
   hostID: string; members: string[]; expiresAt: number;
