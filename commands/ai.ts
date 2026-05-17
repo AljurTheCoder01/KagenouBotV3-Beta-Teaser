@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import AuroraBetaStyler from '@aurora/styler';
 
@@ -30,14 +29,21 @@ const aiCommand: ShadowBot.Command = {
       );
     }
 
-    const askAI = async (text: string) => {
-      const res = await axios.get('https://oreo.gleeze.com/api/aria', {
+    const getImageUrl = (ev: any): string => {
+      const attachments = ev.messageReply?.attachments || [];
+      const img = attachments.find((a: any) => a.type === 'photo' || a.type === 'sticker' || a.type === 'animated_image');
+      return img?.url || img?.previewUrl || '';
+    };
+
+    const askAI = async (text: string, imageUrl: string = '') => {
+      const res = await axios.get('https://rest-api-uacv.onrender.com/api/chipp-ai', {
         params: {
           ask: text,
-          stream: false,
+          uid: senderID,
+          imageUrl,
         },
       });
-      return res.data?.answer || 'No response.';
+      return res.data?.response || res.data?.answer || res.data?.message || 'No response.';
     };
 
     const registerReply = (botMsgID: string) => {
@@ -53,11 +59,13 @@ const aiCommand: ShadowBot.Command = {
 
           global.Kagenou.replyListeners.delete(botMsgID);
 
+          const imageUrl = getImageUrl(event);
+
           try {
-            const nextResponse = await askAI(followUp);
+            const nextResponse = await askAI(followUp, imageUrl);
 
             const nextStyled = AuroraBetaStyler.styleOutput({
-              headerText: 'ARIA AI',
+              headerText: 'CHIPP AI',
               headerSymbol: '🤖',
               headerStyle: 'bold',
               bodyText: nextResponse,
@@ -89,11 +97,13 @@ const aiCommand: ShadowBot.Command = {
       });
     };
 
+    const imageUrl = getImageUrl(event);
+
     try {
-      const aiResponse = await askAI(query);
+      const aiResponse = await askAI(query, imageUrl);
 
       const styledMessage = AuroraBetaStyler.styleOutput({
-        headerText: 'ARIA AI',
+        headerText: 'CHIPP AI',
         headerSymbol: '🤖',
         headerStyle: 'bold',
         bodyText: aiResponse,
