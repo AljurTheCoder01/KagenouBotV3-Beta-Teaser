@@ -31,7 +31,7 @@ const aiCommand: ShadowBot.Command = {
 
     const getImageUrl = (ev: any): string => {
       const attachments = ev.messageReply?.attachments || [];
-      const img = attachments.find((a: any) => a.type === 'photo' || a.type === 'sticker' || a.type === 'animated_image');
+      const img = attachments.find((a: any) => a.type === 'photo' || a.type === 'sticker' || a.type === 'animated_image' || a.type === 'video');
       return img?.url || img?.previewUrl || '';
     };
 
