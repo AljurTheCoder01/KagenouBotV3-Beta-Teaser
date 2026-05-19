@@ -435,7 +435,6 @@ async function listCommands(api: any, event: any) {
 const cmdCommand = {
   config: {
     name: "cmd",
-    aliases: ["ins"],
     version: "13.0.0",
     author: "Aljur Pogoy",
     role: 3,
