@@ -82,7 +82,7 @@ const simCommand: ShadowBot.Command = {
             headerStyle: 'bold',
             bodyText: `Trigger saved!\n\nTrigger: ${trigger}\nResponse: ${response}`,
             bodyStyle: 'sansSerif',
-            footerText: '**Reminder**: Bad words are protected by auto bad-words profanity.',
+            footerText: '**Reminder**: Bad words are protected by profanity filter.',
           }),
           threadID,
           messageID
@@ -117,15 +117,15 @@ const simCommand: ShadowBot.Command = {
     );
   },
 
-  handleEvent: async ({ api, event, db }) => {
+  handleEvent: async ({ api, event }) => {
     const { threadID, messageID, body } = event;
     if (!threadID || !messageID || !body) return;
 
     const message = body.trim();
-    if (!message || !db) return;
+    if (!message || !global.db) return;
 
     try {
-      const simCollection = db.db('sim_collection');
+      const simCollection = global.db.db('sim_collection');
       const all = await simCollection.find({}).toArray();
 
       for (const entry of all) {
