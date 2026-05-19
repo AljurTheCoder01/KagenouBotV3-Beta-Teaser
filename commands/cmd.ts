@@ -7,7 +7,9 @@
 
 import * as fs from "fs-extra";
 import * as path from "path";
-import AuroraBetaStyler from '@aurora/styler';
+
+const AuroraBetaStyler = require(path.join(__dirname, "../core/plugins/aurora-beta-styler.js"));
+
 const COMMANDS_DIR = path.join(__dirname, "../commands");
 const TRASH_DIR = path.join(__dirname, "../database/cmd_trash");
 const SUPPORTED_EXTS = [".js", ".ts"];
@@ -53,7 +55,7 @@ function registerToGlobal(command: any) {
 
 function unregisterFromGlobal(cmdName: string) {
   const name = cmdName.toLowerCase();
-  const command = global.commands.get(name);
+  const command = global.commands.get(name) as any;
   if (!command) return false;
   const aliases = command.config?.aliases || command.aliases || [];
   global.commands.delete(name);
@@ -86,7 +88,32 @@ async function installCommand(
         headerText: "CMD Install",
         headerSymbol: "📦",
         headerStyle: "bold",
-        bodyText: `Usage: /cmd install <name> <code>\n\nYou can paste .js or .ts code directly.\nExtension is auto-detected from your code.`,
+        bodyText: `Usage: /cmd install <name> <code>\n\nYou can paste .js or .ts code directly.\nExtension is auto-detected from your code.\n\n⚠️ Max: 300 lines of code per install.`,
+        bodyStyle: "sansSerif",
+        footerText: "CMD Package Manager",
+      }),
+      threadID,
+      messageID
+    );
+  }
+
+  const CODE_LINE_LIMIT = 300;
+  const lineCount = code.split("\n").length;
+  if (lineCount > CODE_LINE_LIMIT) {
+    return api.sendMessage(
+      AuroraBetaStyler.styleOutput({
+        headerText: "CMD Install — Too Large",
+        headerSymbol: "🚫",
+        headerStyle: "bold",
+        bodyText:
+          `Your code exceeds the install limit.\n\n` +
+          `📏 Your lines   : ${lineCount}\n` +
+          `📐 Maximum lines: ${CODE_LINE_LIMIT}\n` +
+          `➖ Over by      : ${lineCount - CODE_LINE_LIMIT} line(s)\n\n` +
+          `Trim your code to ${CODE_LINE_LIMIT} lines or fewer,\n` +
+          `then try /cmd install again.\n\n` +
+          `💡 Tip: Split large commands into helper\n` +
+          `modules and require() them inside your command.`,
         bodyStyle: "sansSerif",
         footerText: "CMD Package Manager",
       }),
@@ -435,9 +462,10 @@ async function listCommands(api: any, event: any) {
 const cmdCommand = {
   config: {
     name: "cmd",
-    version: "13.0.0",
+    aliases: ["command"],
+    version: "1.0.0",
     author: "Aljur Pogoy",
-    role: 3,
+    role: 4,
     cooldown: 3,
   },
 
@@ -520,11 +548,11 @@ const cmdCommand = {
         bodyText:
           `Unknown subcommand: "${subCommand}"\n\n` +
           `Available Commands:\n` +
-          `📦 /cmd install <name> <code>\n` +
-          `📂 /cmd load <name|all>\n` +
-          `🔴 /cmd unload <name|all>\n` +
-          `🗑️ /cmd trash <name|all>\n` +
-          `📋 /cmd list`,
+          `📦 cmd install <name> <code>\n` +
+          `📂 cmd load <name|all>\n` +
+          `🔴 cmd unload <name|all>\n` +
+          `🗑️ cmd trash <name|all>\n` +
+          `📋 cmd list`,
         bodyStyle: "sansSerif",
         footerText: "CMD Package Manager",
       }),
