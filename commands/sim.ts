@@ -71,15 +71,36 @@ const simCommand: ShadowBot.Command = {
         const existing = await simCollection.findOne({ trigger });
 
         if (existing) {
-          const alreadyExists = existing.responses.includes(response);
-
-          if (alreadyExists) {
+            const alreadyExists = (existing.responses as string[]).includes(response);
+          
+            if (alreadyExists) {
+              return api.sendMessage(
+                AuroraBetaStyler.styleOutput({
+                  headerText: 'Sim Teach',
+                  headerSymbol: '⚠️',
+                  headerStyle: 'bold',
+                  bodyText: `That response already exists for "${trigger}".`,
+                  bodyStyle: 'sansSerif',
+                  footerText: 'Developed by: **Aljur Pogoy**',
+                }),
+                threadID,
+                messageID
+              );
+            }
+          
+            const updatedResponses = [...(existing.responses || []), response];
+          
+            await simCollection.updateOne(
+              { trigger },
+              { $set: { responses: updatedResponses } }
+            );
+          
             return api.sendMessage(
               AuroraBetaStyler.styleOutput({
                 headerText: 'Sim Teach',
-                headerSymbol: '⚠️',
+                headerSymbol: '✅',
                 headerStyle: 'bold',
-                bodyText: `That response already exists for "${trigger}".`,
+                bodyText: `New response added to "${trigger}"!`,
                 bodyStyle: 'sansSerif',
                 footerText: 'Developed by: **Aljur Pogoy**',
               }),
@@ -87,25 +108,6 @@ const simCommand: ShadowBot.Command = {
               messageID
             );
           }
-
-          await simCollection.updateOne(
-            { trigger },
-            { $push: { responses: response } }
-          );
-
-          return api.sendMessage(
-            AuroraBetaStyler.styleOutput({
-              headerText: 'Sim Teach',
-              headerSymbol: '✅',
-              headerStyle: 'bold',
-              bodyText: `New response added to "${trigger}!`,
-              bodyStyle: 'sansSerif',
-              footerText: '**Reminder**: Bad words are protected by profanity filter.',
-            }),
-            threadID,
-            messageID
-          );
-        }
 
         await simCollection.insertOne({ trigger, responses: [response] });
 
