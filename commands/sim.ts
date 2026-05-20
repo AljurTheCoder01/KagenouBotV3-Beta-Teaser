@@ -129,7 +129,8 @@ const simCommand: ShadowBot.Command = {
       const all = await simCollection.find({}).toArray();
 
       for (const entry of all) {
-        if (message.toLowerCase().includes(entry.trigger.toLowerCase())) {
+        const regex = new RegExp(`^${entry.trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+        if (regex.test(message)) {
           await api.sendMessage(entry.response, threadID, messageID);
           return;
         }
