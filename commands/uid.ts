@@ -1,7 +1,13 @@
-
 import AuroraBetaStyler from "@aurora/styler";
 import axios from "axios";
+import * as cheerio from "cheerio";
 
+const normalizeUrl = (input: string): string => {
+  if (!input.startsWith("http")) {
+    return "https://www.facebook.com/" + input;
+  }
+  return input;
+};
 
 const uidCommand: ShadowBot.Command = {
   config: {
@@ -29,16 +35,39 @@ const uidCommand: ShadowBot.Command = {
         uid = mention;
         responseText = `${uid}`;
       }
-      else if (args[0] && args[0].startsWith("https")) {
-        const url = encodeURIComponent(args[0]);
-        const apiUrl = `https://kaiz-apis.gleeze.com/api/fbuid?url=${url}&apikey=117cafc8-ef3b-4632-bc1c-13b38b912081`;
-        const { data } = await axios.get(apiUrl);
+      else if (args[0] && args[0].startsWith("http")) {
+        const url = normalizeUrl(args[0]);
 
-        if (data && data.UID) {
-          uid = data.UID;
+        const response = await axios.get(url, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+          },
+        });
+
+        const html = response.data;
+        const $ = cheerio.load(html);
+
+        let scraped: string | null = null;
+
+        const idMatch = html.match(/profile\.php\?id=(\d+)/);
+        if (idMatch) scraped = idMatch[1];
+
+        if (!scraped) {
+          const entityMatch = html.match(/"entity_id":"(\d+)"/);
+          if (entityMatch) scraped = entityMatch[1];
+        }
+
+        if (!scraped) {
+          const userMatch = html.match(/"userID":"(\d+)"/);
+          if (userMatch) scraped = userMatch[1];
+        }
+
+        if (scraped) {
+          uid = scraped;
           responseText = `✅ | UID from URL: ${uid}`;
         } else {
-          responseText = "❌";
+          responseText = "❌ UID not found. Profile might be private or layout changed.";
         }
       } else {
         responseText = "❌";
