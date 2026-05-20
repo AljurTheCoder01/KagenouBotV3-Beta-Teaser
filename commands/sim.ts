@@ -2,7 +2,6 @@ import AuroraBetaStyler from '@aurora/styler';
 
 const simCommand: ShadowBot.Command = {
   config: {
-    author: 'aljurx',
     name: 'sim',
     description: 'Simulate auto-response triggers. Use "teach" to add new ones.',
     usage: 'sim teach <trigger> | <response>',
@@ -69,11 +68,46 @@ const simCommand: ShadowBot.Command = {
 
       try {
         const simCollection = db.db('sim_collection');
-        await simCollection.updateOne(
-          { trigger },
-          { $set: { trigger, response } },
-          { upsert: true }
-        );
+        const existing = await simCollection.findOne({ trigger });
+
+        if (existing) {
+          const alreadyExists = existing.responses.includes(response);
+
+          if (alreadyExists) {
+            return api.sendMessage(
+              AuroraBetaStyler.styleOutput({
+                headerText: 'Sim Teach',
+                headerSymbol: '⚠️',
+                headerStyle: 'bold',
+                bodyText: `That response already exists for "${trigger}".`,
+                bodyStyle: 'sansSerif',
+                footerText: 'Developed by: **Aljur Pogoy**',
+              }),
+              threadID,
+              messageID
+            );
+          }
+
+          await simCollection.updateOne(
+            { trigger },
+            { $push: { responses: response } }
+          );
+
+          return api.sendMessage(
+            AuroraBetaStyler.styleOutput({
+              headerText: 'Sim Teach',
+              headerSymbol: '✅',
+              headerStyle: 'bold',
+              bodyText: `New response added to "${trigger}!`,
+              bodyStyle: 'sansSerif',
+              footerText: '**Reminder**: Bad words are protected by profanity filter.',
+            }),
+            threadID,
+            messageID
+          );
+        }
+
+        await simCollection.insertOne({ trigger, responses: [response] });
 
         return api.sendMessage(
           AuroraBetaStyler.styleOutput({
@@ -131,7 +165,10 @@ const simCommand: ShadowBot.Command = {
       for (const entry of all) {
         const regex = new RegExp(`^${entry.trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
         if (regex.test(message)) {
-          await api.sendMessage(entry.response, threadID, messageID);
+          const responses: string[] = entry.responses || [];
+          if (!responses.length) return;
+          const picked = responses[Math.floor(Math.random() * responses.length)];
+          await api.sendMessage(picked, threadID, messageID);
           return;
         }
       }
