@@ -68,39 +68,21 @@ const simCommand: ShadowBot.Command = {
 
       try {
         const simCollection = db.db('sim_collection');
+
         const existing = await simCollection.findOne({ trigger });
 
         if (existing) {
-            const alreadyExists = (existing.responses as string[]).includes(response);
-          
-            if (alreadyExists) {
-              return api.sendMessage(
-                AuroraBetaStyler.styleOutput({
-                  headerText: 'Sim Teach',
-                  headerSymbol: '⚠️',
-                  headerStyle: 'bold',
-                  bodyText: `That response already exists for "${trigger}".`,
-                  bodyStyle: 'sansSerif',
-                  footerText: 'Developed by: **Aljur Pogoy**',
-                }),
-                threadID,
-                messageID
-              );
-            }
-          
-            const updatedResponses = [...(existing.responses || []), response];
-          
-            await simCollection.updateOne(
-              { trigger },
-              { $set: { responses: updatedResponses } }
-            );
-          
+          const currentResponses: string[] = Array.isArray(existing.responses)
+            ? existing.responses
+            : [];
+
+          if (currentResponses.includes(response)) {
             return api.sendMessage(
               AuroraBetaStyler.styleOutput({
                 headerText: 'Sim Teach',
-                headerSymbol: '✅',
+                headerSymbol: '⚠️',
                 headerStyle: 'bold',
-                bodyText: `New response added to "${trigger}"!`,
+                bodyText: `That response already exists for "${trigger}".`,
                 bodyStyle: 'sansSerif',
                 footerText: 'Developed by: **Aljur Pogoy**',
               }),
@@ -108,6 +90,25 @@ const simCommand: ShadowBot.Command = {
               messageID
             );
           }
+
+          const newResponses = [...currentResponses, response];
+
+          await simCollection.deleteOne({ trigger });
+          await simCollection.insertOne({ trigger, responses: newResponses });
+
+          return api.sendMessage(
+            AuroraBetaStyler.styleOutput({
+              headerText: 'Sim Teach',
+              headerSymbol: '✅',
+              headerStyle: 'bold',
+              bodyText: `New response added to "${trigger}"!`,
+              bodyStyle: 'sansSerif',
+              footerText: 'Developed by: **Aljur Pogoy**',
+            }),
+            threadID,
+            messageID
+          );
+        }
 
         await simCollection.insertOne({ trigger, responses: [response] });
 
@@ -123,13 +124,14 @@ const simCommand: ShadowBot.Command = {
           threadID,
           messageID
         );
-      } catch {
+      } catch (err: any) {
+        console.error('[SIM] teach error:', err);
         return api.sendMessage(
           AuroraBetaStyler.styleOutput({
             headerText: 'Sim Teach',
             headerSymbol: '❌',
             headerStyle: 'bold',
-            bodyText: 'Failed to save trigger to database.',
+            bodyText: `Error: ${err.message}`,
             bodyStyle: 'sansSerif',
             footerText: 'Developed by: **Aljur Pogoy**',
           }),
@@ -165,10 +167,15 @@ const simCommand: ShadowBot.Command = {
       const all = await simCollection.find({}).toArray();
 
       for (const entry of all) {
-        const regex = new RegExp(`^${entry.trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+        const escaped = entry.trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^${escaped}$`, 'i');
+
         if (regex.test(message)) {
-          const responses: string[] = entry.responses || [];
+          const responses: string[] = Array.isArray(entry.responses)
+            ? entry.responses
+            : [];
           if (!responses.length) return;
+
           const picked = responses[Math.floor(Math.random() * responses.length)];
           await api.sendMessage(picked, threadID, messageID);
           return;
