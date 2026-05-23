@@ -119,7 +119,7 @@ module.exports = function mountDashboard(app) {
   });
 
   app.get("/download/dashboard.apk", (req, res) => {
-  const apkPath = path.join(__dirname, "assets/KagenouBot_Dashboard_v12.0.0.apk");
+  const apkPath = path.join(__dirname, "/assets/KagenouBot_Dashboard_v12.0.0.apk");
   if (!fs.existsSync(apkPath)) {
     return res.status(404).json({ ok: false, error: "APK not available yet." });
   }
