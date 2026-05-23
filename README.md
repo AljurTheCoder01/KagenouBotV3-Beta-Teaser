@@ -218,7 +218,43 @@ Aljur Pogoy / GeoArchonsTeam / Cassidy-Team
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software to use, copy, modify, distribute, and publish as needed.
 ```
+## NMAP PROJECT
+```mermaid
+graph TD
+    A[KagenouBot] --> B[index.js]
+    A --> C[run.js]
+    A --> D[package.json]
 
+    A --> E[commands/]
+    E --> E1[Bot Commands]
+    E --> E2[System Commands]
+
+    A --> F[core/]
+    F --> F1[Core Logic]
+    F --> F2[Handlers]
+
+    A --> G[config/]
+    G --> G1[Bot Config]
+    G --> G2[Settings]
+
+    A --> H[database/]
+    H --> H1[MongoDB / Storage]
+
+    A --> I[dashboard/]
+    I --> I1[Web Dashboard]
+    I --> I2[APK Assets]
+
+    A --> J[Discord/]
+    J --> J1[Discord Integration]
+
+    A --> K[Data/]
+    K --> K1[Bot Data]
+    K --> K2[JSON Files]
+
+    A --> L[utils/]
+    L --> L1[Helpers]
+    L --> L2[Functions]
+```
 
 ---
 
