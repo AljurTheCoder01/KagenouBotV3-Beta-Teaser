@@ -60,11 +60,11 @@ module.exports = function mountDashboard(app) {
   app.use("/assets", express.static(require("path").join(__dirname, "assets")));
 
   app.get("/download/dashboard.apk", (req, res) => {
-  const apkPath = path.join(__dirname, "/assets/KagenouBot_Dashboard_v12.0.0.apk");
+  const apkPath = path.join(__dirname, "./assets/Kagenou_Dashboard__v12.0.0.apk");
   if (!fs.existsSync(apkPath)) {
     return res.status(404).json({ ok: false, error: "APK not available yet." });
   }
-  res.download(apkPath, "Kagenou_Dashboard.apk");
+  res.download(apkPath, "KagenouDashboard.apk");
   });
   
   app.post("/login", (req, res) => {
