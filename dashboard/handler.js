@@ -54,7 +54,7 @@ module.exports = function mountDashboard(app) {
   app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
   app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
   app.get("/guest", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-
+  app.get("/apk", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
   app.post("/login", (req, res) => {
     const { password } = req.body || {};
     const expected = process.env.DASHBOARD_PASSWORD || global.config?.dashboardPassword;
@@ -116,6 +116,14 @@ module.exports = function mountDashboard(app) {
     const formatted = `❲ 👑 ❳ Message from Admin\n━━━━━━━━━━━━━━━━━━\n${message.trim()}\n\nFrom: ${global.config?.botName || "Shadow Garden Bot"} Dashboard`;
     const { sent, failed } = await sendToThreads(api, threadIDs, formatted);
     return res.json({ ok: true, sent: sent.length, failed: failed.length, failedList: failed });
+  });
+
+  app.get("/download/dashboard.apk", (req, res) => {
+  const apkPath = path.join(__dirname, "assets/KagenouBot_Dashboard_v12.0.0.apk");
+  if (!fs.existsSync(apkPath)) {
+    return res.status(404).json({ ok: false, error: "APK not available yet." });
+  }
+  res.download(apkPath, "Kagenou_Dashboard.apk");
   });
 
   app.post("/data/broadcast", async (req, res) => {
