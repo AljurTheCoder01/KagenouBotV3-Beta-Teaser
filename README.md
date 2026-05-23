@@ -1,10 +1,12 @@
+<div align="center">
+  <h2>Official Version KagenouBot ⚔️</h2>
+</div>
 <p align="center">
   <img src="./utils/i-am-atomic-cid.gif" alt="Image description" />
 </p>
 
-# Official Version of KagenouBot ⚔️
-
 Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Messenger bot inspired by *The Eminence in Shadow*. This multi-system bot is built with flexibility, speed, and customization in mind. KagenouBot is your ultimate companion in automating and enhancing chat experiences.
+
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/aljurxdev/KagenouBot)
 ![GitHub stars](https://img.shields.io/github/stars/aljurxdev/KagenouBot)
@@ -256,9 +258,14 @@ graph TD
     L --> L2[Functions]
 ```
 
----
+> [!NOTE]
+> This project is still being updated and is expected to be completed by February 2027.
 
 ## Credits
 
 - **Shadow Garden Lore** - Inspired by *The Eminence in Shadow*
 - **Bot Devs** - Aljur Pogoy and his Girlfriend 
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com/?lines=Thank+you+for+using+our+KagenouBot.&font=Fira%20Code&center=true&width=450&height=50&duration=4000&pause=1000" alt="KagenouBot Typing SVG">
+</p>
