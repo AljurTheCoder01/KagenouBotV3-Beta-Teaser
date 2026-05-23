@@ -2,7 +2,7 @@ const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs-extra");
 const express = require("express");
-app.use(express.json({ limit: "20mb" }));
+
 
 const sessions   = new Map();
 const SESSION_TTL = 1000 * 60 * 60 * 6;
@@ -1438,7 +1438,7 @@ module.exports = function mountDashboard(app) {
   }, 1000 * 60 * 60);
 
   app.get("/transaction", (req, res) => res.sendFile(require("path").join(__dirname, "index.html")));
-
+  app.use(express.json({ limit: "20mb" }));
   global.log.success("[GUEST] Guest mode mounted at /guest");
   global.log.success("[PREMIUM] Premium subscription system mounted.");
 };
