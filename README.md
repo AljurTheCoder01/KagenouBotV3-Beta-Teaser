@@ -1,3 +1,4 @@
+
 <div align="center">
   <h2>Official Version KagenouBot ⚔️</h2>
 </div>
@@ -220,6 +221,10 @@ Aljur Pogoy / GeoArchonsTeam / Cassidy-Team
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software to use, copy, modify, distribute, and publish as needed.
 ```
+
+![snake](https://raw.githubusercontent.com/platane/snk/output/github-contribution-grid-snake.svg)
+
+
 ## NMAP PROJECT
 ```mermaid
 graph TD
