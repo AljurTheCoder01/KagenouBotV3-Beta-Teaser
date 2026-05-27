@@ -28,6 +28,10 @@ Welcome to **Official version of KagenouBot ver 12.0.0**, an elite Facebook Mess
 
 ***Join Our Community*** [Join here](https://facebook.com/groups/1989560245158541/)
 
+> [!NOTE]
+> To protect your credentials account and mongodb uri and dashboard password. you can put it on .env.
+
+
 ---
 
 ## Note: All commands/codes are created by me (Aljur pogoy), except for a few sourced from Botpack."
@@ -260,6 +264,8 @@ graph TD
 
 > [!NOTE]
 > This project is still being updated and is expected to be completed by February 2027.
+>
+
 
 ## Credits
 
