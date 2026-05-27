@@ -37,7 +37,8 @@
     @keyframes authIconIn{from{opacity:0;transform:translateY(12px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes authTitleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes authModesIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .auth-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+     .auth-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;opacity:0;transition:opacity 0.2s ease}
+    .auth-wrap.ready{opacity:1}
     .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 28px;width:100%;max-width:360px;box-shadow:var(--shadow);animation:authCardIn .45s cubic-bezier(.22,.68,0,1.2) both}
     .auth-icon{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:authIconIn .4s cubic-bezier(.22,.68,0,1.3) .1s both}
     .auth-icon svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
@@ -1096,11 +1097,12 @@ window.onload = () => {
         .then(r => r.json())
         .then(d => {
           if (d.ok) showGuestApp(SESSION_UID);
-          else { clearGuestSession(); showAuthForMode('guest'); }
+          else { clearGuestSession(); showAuthForMode('guest'); document.getElementById('authWrap').classList.add('ready'); }
         })
-        .catch(() => { clearGuestSession(); showAuthForMode('guest'); });
+        .catch(() => { clearGuestSession(); showAuthForMode('guest'); document.getElementById('authWrap').classList.add('ready'); });
     } else {
       showAuthForMode('guest');
+      document.getElementById('authWrap').classList.add('ready');
     }
     return;
   }
@@ -1110,15 +1112,17 @@ window.onload = () => {
         .then(r => r.json())
         .then(d => {
           if (d.ok) { showAdminApp(); loadAdminStats(); }
-          else { ADMIN_TOKEN = ''; sessionStorage.removeItem('sg_tok'); showAuthForMode('admin'); }
+          else { ADMIN_TOKEN = ''; sessionStorage.removeItem('sg_tok'); showAuthForMode('admin'); document.getElementById('authWrap').classList.add('ready'); }
         })
-        .catch(() => { ADMIN_TOKEN = ''; sessionStorage.removeItem('sg_tok'); showAuthForMode('admin'); });
+        .catch(() => { ADMIN_TOKEN = ''; sessionStorage.removeItem('sg_tok'); showAuthForMode('admin'); document.getElementById('authWrap').classList.add('ready'); });
     } else {
       showAuthForMode('admin');
+      document.getElementById('authWrap').classList.add('ready');
     }
     return;
   }
   document.getElementById('authWrap').style.display = 'flex';
+  document.getElementById('authWrap').classList.add('ready');
 };
 
 function scrollChatToBottom() {
@@ -1258,7 +1262,9 @@ async function adminLogin() {
 }
 
 function showAdminApp() {
-  document.getElementById('authWrap').style.display = 'none';
+  const aw = document.getElementById('authWrap');
+  aw.style.display = 'none';
+  aw.classList.remove('ready');
   document.getElementById('adminApp').classList.add('visible');
   document.getElementById('guestApp').classList.remove('visible');
   loadBroadcastMeta();
@@ -1552,7 +1558,9 @@ async function guestLogout() {
 }
 
 function showGuestApp(uid) {
-  document.getElementById('authWrap').style.display = 'none';
+  const aw = document.getElementById('authWrap');
+  aw.style.display = 'none';
+  aw.classList.remove('ready');
   document.getElementById('adminApp').classList.remove('visible');
   document.getElementById('guestApp').classList.add('visible');
   document.getElementById('guestSubtitle').textContent = `Guest • UID: ${uid}`;
