@@ -1603,6 +1603,35 @@ function setReply(messageId, previewText) {
 }
 function cancelReply() { guestReplyContext = null; document.getElementById('replyBar').classList.remove('visible'); }
 
+function patchGuestBubble(msgId, newBody, isUnsent) {
+  const wrap = (window._guestBubbleMap || {})[msgId] || document.querySelector(`[data-msgid="${msgId}"]`);
+  if (!wrap) return;
+  if (isUnsent) {
+    const b = wrap.querySelector('[data-bubble-text]');
+    if (b) { b.textContent = '🚫 This message was unsent.'; b.style.fontStyle = 'italic'; b.style.color = 'var(--muted)'; }
+    wrap.querySelectorAll('.attach-media, .attach-card, .audio-card').forEach(el => el.remove());
+    return;
+  }
+  if (newBody !== undefined) {
+    const b = wrap.querySelector('[data-bubble-text]');
+    if (b && !wrap.querySelector('.edited-label')) {
+      b.textContent = newBody;
+      const lbl = document.createElement('span'); lbl.className = 'edited-label';
+      lbl.style.cssText = 'font-size:10px;color:var(--muted);margin-left:6px;font-style:italic';
+      lbl.textContent = '(edited)'; b.appendChild(lbl);
+    }
+  }
+}
+
+async function pollGuestMessage(msgId) {
+  try {
+    const d = await sgFetch('/guest/message/' + msgId);
+    if (!d?.ok) return;
+    if (d.msg.unsent) patchGuestBubble(msgId, null, true);
+    else if (d.msg.edited) patchGuestBubble(msgId, d.msg.body, false);
+  } catch {}
+}
+
 const REACTIONS = ['😢', '👍', '🤩', '🗿', '💝'];
 const messageReactions = {};
 const userReacted = {};
@@ -1681,13 +1710,14 @@ function appendGuestBubble(who, text, attachments = [], msgId = null, replyPrevi
   wrap.className = `bubble-wrap ${who}`;
   const id = msgId || `gmsg_${++guestMsgCounter}_${Date.now()}`;
   wrap.dataset.msgid = id;
+  if (msgId) { window._guestBubbleMap = window._guestBubbleMap || {}; window._guestBubbleMap[msgId] = wrap; }
   if (replyPreview) {
     const preview = document.createElement('div');
     preview.className = 'reply-preview';
     preview.innerHTML = `<strong>${who === 'user' ? 'Replying to bot' : 'Replied to command'}</strong>${escHtml(replyPreview.slice(0, 80))}${replyPreview.length > 80 ? '…' : ''}`;
     wrap.appendChild(preview);
   }
-  if (text && text.trim()) { const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text; wrap.appendChild(b); }
+  if (text && text.trim()) { const b = document.createElement('div'); b.className = 'bubble'; b.dataset.bubbleText = '1'; b.textContent = text; wrap.appendChild(b); }
   (attachments || []).filter(Boolean).forEach(a => {
     if (a.kind === 'media' && a.dataUrl) {
       if (a.mime?.startsWith('image/')) {
@@ -2030,6 +2060,15 @@ async function refreshGroupChat() {
   const wasAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 80;
   const welcome = area.querySelector('.empty-state'); if (welcome) welcome.remove();
   const newMsgs = d.messages.slice(groupLastMsgCount); groupLastMsgCount = d.messages.length;
+  d.messages.forEach(msg => {
+    const existing = area.querySelector(`[data-msgid="${msg.id}"]`);
+    if (!existing) return;
+    if (msg.unsent) patchGuestBubble(msg.id, null, true);
+    else if (msg.edited) {
+      const b = existing.querySelector('[data-bubble-text]');
+      if (b && !existing.querySelector('.edited-label')) patchGuestBubble(msg.id, msg.body, false);
+    }
+  });
   newMsgs.forEach(msg => renderGroupMessage(msg, d.profiles));
   if (wasAtBottom) area.scrollTop = area.scrollHeight;
 }
@@ -2044,7 +2083,20 @@ function renderGroupMessage(msg, profiles) {
   const wrap = document.createElement('div'); wrap.className = 'bubble-wrap ' + (isMe ? 'user' : 'bot'); wrap.dataset.msgid = msg.id || ''; wrap.dataset.senderuid = msg.senderUID || '';
   if (!isMe) { const nameEl = document.createElement('div'); nameEl.style.cssText = 'font-size:11px;font-weight:600;color:var(--muted);padding:0 4px;margin-bottom:2px'; nameEl.textContent = senderName; wrap.appendChild(nameEl); }
   if (msg.replyTo && msg.replyToBody !== undefined) { const chip = document.createElement('div'); chip.className = 'reply-chip'; chip.innerHTML = `<div class="reply-chip-name">↩ ${escHtml(msg.replyToSender || 'KagenouBot')}</div><div class="reply-chip-text">${escHtml(msg.replyToBody || '')}</div>`; wrap.appendChild(chip); }
-  if (msg.body?.trim()) { const b = document.createElement('div'); b.className = 'bubble'; b.textContent = msg.body; wrap.appendChild(b); }
+  if (msg.unsent) {
+    const b = document.createElement('div'); b.className = 'bubble';
+    b.style.fontStyle = 'italic'; b.style.color = 'var(--muted)';
+    b.textContent = '🚫 This message was unsent.'; wrap.appendChild(b);
+  } else if (msg.body?.trim()) {
+    const b = document.createElement('div'); b.className = 'bubble';
+    b.dataset.bubbleText = '1'; b.textContent = msg.body;
+    if (msg.edited) {
+      const lbl = document.createElement('span'); lbl.className = 'edited-label';
+      lbl.style.cssText = 'font-size:10px;color:var(--muted);margin-left:6px;font-style:italic';
+      lbl.textContent = '(edited)'; b.appendChild(lbl);
+    }
+    wrap.appendChild(b);
+  }
   (msg.attachments || []).filter(Boolean).forEach(a => {
     if (a.kind === 'media' && a.dataUrl) {
       if (a.mime?.startsWith('image/')) { const img = document.createElement('img'); img.src = a.dataUrl; img.style.cssText = 'max-width:220px;max-height:180px;width:100%;object-fit:cover;border-radius:12px;display:block;cursor:pointer;margin-top:4px'; img.onclick = () => openMediaViewer(a.dataUrl, 'image'); wrap.appendChild(img); }
