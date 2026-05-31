@@ -947,7 +947,7 @@ module.exports = function mountDashboard(app) {
       const trimmed = q.trim();
       let doc = await global.db.db("guestUsers").findOne({ uid: trimmed });
       if (!doc) {
-        doc = await global.db.db("guestUsers").findOne({ displayName: { $regex: new RegExp("^" + trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") } });
+        doc = await global.db.db("guestUsers").findOne({ displayName: { $regex: new RegExp("^" + trimmed.replace(/[.*+?^${}()|[\\\]]/g, "\\$&"), "i") } });
       }
       if (!doc) return res.json({ ok: false, error: "User not found." });
       const profile = await getProfile(doc.uid);
