@@ -439,24 +439,43 @@ module.exports = function mountDashboard(app) {
         if (typeof cb === "function") cb(null);
         return Promise.resolve();
       },
-      async editMessage(messageID, newBody, cb) {
-        if (guestMessageStore.has(messageID)) {
-          const m = guestMessageStore.get(messageID);
-          m.body = typeof newBody === "string" ? newBody : (newBody?.body || "");
+      /**
+       * Supports two call signatures to match both internal usage.
+       *
+       * @overload Internal style:
+       * @param {string} messageI
+       * @param {string|object} newBody.
+       * @param {function} [cb]
+       * @param {string} newBody
+       * @param {string} messageID
+       * @param {string} threadID
+       * @returns {Promise<void>}
+       */
+      async editMessage(messageID, newBody, threadIDorCb, cb) {
+        let resolvedMsgID = messageID;
+        let resolvedBody = newBody;
+        if (typeof messageID === "string" && typeof newBody === "string" && typeof threadIDorCb === "string") {
+          resolvedBody = messageID;
+          resolvedMsgID = newBody;
+        }
+        const finalBody = typeof resolvedBody === "string" ? resolvedBody : (resolvedBody?.body || "");
+        if (guestMessageStore.has(resolvedMsgID)) {
+          const m = guestMessageStore.get(resolvedMsgID);
+          m.body = finalBody;
           m.edited = true;
         }
         if (global.db) {
           try {
             await global.db.db("groupMessages").updateOne(
-              { $or: [{ id: messageID }, { vmsgId: messageID }] },
-              { $set: { body: typeof newBody === "string" ? newBody : (newBody?.body || ""), edited: true } }
+              { $or: [{ id: resolvedMsgID }, { vmsgId: resolvedMsgID }] },
+              { $set: { body: finalBody, edited: true } }
             );
           } catch (e) {}
         }
-        if (typeof cb === "function") cb(null);
+        const callback = typeof threadIDorCb === "function" ? threadIDorCb : (typeof cb === "function" ? cb : null);
+        if (callback) callback(null);
         return Promise.resolve();
       },
-
       markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Promise.resolve(); },
       markAsDelivered(tid, mid, cb){ if (typeof cb === "function") cb(null); return Promise.resolve(); },
       listenMqtt()   { return { stopListening: () => {} }; },
@@ -823,6 +842,15 @@ module.exports = function mountDashboard(app) {
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }
+  });
+
+  app.post("/guest/message/:id/unsend", (req, res) => {
+    const session = getGuestSession(req.headers["x-guest-token"]);
+    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
+    const msg = guestMessageStore.get(req.params.id);
+    if (!msg) return res.status(404).json({ ok: false, error: "Not found." });
+    msg.unsent = true; msg.body = ""; msg.attachments = [];
+    return res.json({ ok: true });
   });
 
   app.get("/guest/message/:id", (req, res) => {
