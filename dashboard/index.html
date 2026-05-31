@@ -1767,7 +1767,19 @@ function appendGuestBubble(who, text, attachments = [], msgId = null, replyPrevi
     const actions = document.createElement('div'); actions.className = 'bubble-actions';
     const replyBtn = document.createElement('button'); replyBtn.className = 'reply-action-btn';
     replyBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> Reply`;
-    replyBtn.onclick = () => setReply(id, text || '(attachment)'); actions.appendChild(replyBtn); wrap.appendChild(actions);
+    replyBtn.onclick = () => setReply(id, text || '(attachment)'); actions.appendChild(replyBtn);
+    const unsendBtn = document.createElement('button'); unsendBtn.className = 'reply-action-btn';
+    unsendBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Unsend`;
+    unsendBtn.onclick = async () => {
+      unsendBtn.disabled = true;
+      try {
+        const d = await sgFetch('/guest/message/' + id + '/unsend', { method: 'POST' });
+        if (d?.ok) patchGuestBubble(id, null, true);
+        else socialToast('Cannot unsend.');
+      } catch { socialToast('Failed to unsend.'); }
+      unsendBtn.disabled = false;
+    };
+    actions.appendChild(unsendBtn); wrap.appendChild(actions);
     wrap.appendChild(buildReactionBar(id));
   }
   const wasAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 100;
