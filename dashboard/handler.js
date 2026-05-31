@@ -203,7 +203,6 @@ module.exports = function mountDashboard(app) {
   global.log.success("[DASHBOARD] Admin dashboard mounted at / and /admin");
 
   const guestSessions = new Map();
-  const guestMessageStore = new Map();
   const GUEST_TTL     = 1000 * 60 * 60 * 3;
 
   function createGuestSession(uid) {
@@ -389,7 +388,6 @@ module.exports = function mountDashboard(app) {
         }
 
         responseBuffer.push(msgEntry);
-        guestMessageStore.set(fakeInfo.messageID, msgEntry);
         return fakeInfo;
       },
 
@@ -422,60 +420,7 @@ module.exports = function mountDashboard(app) {
         return global.botApi?.getCurrentUserID ? global.botApi.getCurrentUserID() : String(uid);
       },
       changeNickname(n, t, p, cb)  { if (typeof cb === "function") cb(null); return Promise.resolve(); },
-
-      async unsendMessage(messageID, cb) {
-        if (guestMessageStore.has(messageID)) {
-          const m = guestMessageStore.get(messageID);
-          m.unsent = true; m.body = ""; m.attachments = [];
-        }
-        if (global.db) {
-          try {
-            await global.db.db("groupMessages").updateOne(
-              { $or: [{ id: messageID }, { vmsgId: messageID }] },
-              { $set: { unsent: true, body: "", attachments: [] } }
-            );
-          } catch (e) {}
-        }
-        if (typeof cb === "function") cb(null);
-        return Promise.resolve();
-      },
-      /**
-       * Supports two call signatures to match both internal usage.
-       *
-       * @overload Internal style:
-       * @param {string} messageI
-       * @param {string|object} newBody.
-       * @param {function} [cb]
-       * @param {string} newBody
-       * @param {string} messageID
-       * @param {string} threadID
-       * @returns {Promise<void>}
-       */
-      async editMessage(messageID, newBody, threadIDorCb, cb) {
-        let resolvedMsgID = messageID;
-        let resolvedBody = newBody;
-        if (typeof messageID === "string" && typeof newBody === "string" && typeof threadIDorCb === "string") {
-          resolvedBody = messageID;
-          resolvedMsgID = newBody;
-        }
-        const finalBody = typeof resolvedBody === "string" ? resolvedBody : (resolvedBody?.body || "");
-        if (guestMessageStore.has(resolvedMsgID)) {
-          const m = guestMessageStore.get(resolvedMsgID);
-          m.body = finalBody;
-          m.edited = true;
-        }
-        if (global.db) {
-          try {
-            await global.db.db("groupMessages").updateOne(
-              { $or: [{ id: resolvedMsgID }, { vmsgId: resolvedMsgID }] },
-              { $set: { body: finalBody, edited: true } }
-            );
-          } catch (e) {}
-        }
-        const callback = typeof threadIDorCb === "function" ? threadIDorCb : (typeof cb === "function" ? cb : null);
-        if (callback) callback(null);
-        return Promise.resolve();
-      },
+      unsendMessage(messageID, cb) { if (typeof cb === "function") cb(null); return Promise.resolve(); },
       markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Promise.resolve(); },
       markAsDelivered(tid, mid, cb){ if (typeof cb === "function") cb(null); return Promise.resolve(); },
       listenMqtt()   { return { stopListening: () => {} }; },
@@ -506,8 +451,8 @@ module.exports = function mountDashboard(app) {
     if (!global.config) return 0;
     const developers = (global.config.developers || []).map(String);
     const moderators = (global.config.moderators || []).map(String);
-    const admins = (global.config.admins || []).map(String);
-    const vips = (global.config.vips || []).map(String);
+    const admins     = (global.config.admins     || []).map(String);
+    const vips       = (global.config.vips        || []).map(String);
     if (developers.includes(uid)) return 4;
     if (vips.includes(uid))       return 3;
     if (moderators.includes(uid)) return 2;
@@ -616,7 +561,7 @@ module.exports = function mountDashboard(app) {
   const trimmed = input.trim();
 
   const responseBuffer = [];
-  const vApi = createVirtualApi(uid, responseBuffer);
+  const vApi           = createVirtualApi(uid, responseBuffer);
 
   if (replyToMessageID) {
     const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
@@ -630,9 +575,9 @@ module.exports = function mountDashboard(app) {
   }
   
   let command = null;
-  let body = trimmed;
+  let body    = trimmed;
   let cmdName = "";
-  let args = [];
+  let args    = [];
 
   if (trimmed.startsWith(prefix)) {
     const parts = trimmed.slice(prefix.length).trim().split(/\s+/);
@@ -668,7 +613,7 @@ module.exports = function mountDashboard(app) {
       return [{ type: "message", body: `Command not recognized. Use ${prefix}help to see available commands.`, attachments: [], timestamp: Date.now() }];
     }
   }
-    const userRole = getGuestUserRole(uid);
+    const userRole    = getGuestUserRole(uid);
     const commandRole = command.config?.role ?? command.role ?? 0;
     if (userRole < commandRole) {
       return [{ type: "message", body: `Permission denied. Requires role ${commandRole}, your role is ${userRole}.`, attachments: [], timestamp: Date.now() }];
@@ -844,23 +789,6 @@ module.exports = function mountDashboard(app) {
     }
   });
 
-  app.post("/guest/message/:id/unsend", (req, res) => {
-    const session = getGuestSession(req.headers["x-guest-token"]);
-    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
-    const msg = guestMessageStore.get(req.params.id);
-    if (!msg) return res.status(404).json({ ok: false, error: "Not found." });
-    msg.unsent = true; msg.body = ""; msg.attachments = [];
-    return res.json({ ok: true });
-  });
-
-  app.get("/guest/message/:id", (req, res) => {
-    const session = getGuestSession(req.headers["x-guest-token"]);
-    if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
-    const msg = guestMessageStore.get(req.params.id);
-    if (!msg) return res.status(404).json({ ok: false, error: "Not found." });
-    return res.json({ ok: true, msg });
-  });
-
   app.post("/guest/react", async (req, res) => {
     const session = getGuestSession(req.headers["x-guest-token"]);
     if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
@@ -947,7 +875,7 @@ module.exports = function mountDashboard(app) {
       const trimmed = q.trim();
       let doc = await global.db.db("guestUsers").findOne({ uid: trimmed });
       if (!doc) {
-        doc = await global.db.db("guestUsers").findOne({ displayName: { $regex: new RegExp("^" + trimmed.replace(/[.*+?^${}()|[\\\]]/g, "\\$&"), "i") } });
+        doc = await global.db.db("guestUsers").findOne({ displayName: { $regex: new RegExp("^" + trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") } });
       }
       if (!doc) return res.json({ ok: false, error: "User not found." });
       const profile = await getProfile(doc.uid);
@@ -1344,11 +1272,11 @@ module.exports = function mountDashboard(app) {
 });
   
   const PREMIUM_COLLECTION = "premiumUsers";
-  const PREMIUM_REQUESTS = "premiumRequests";
-  const GCASH_NUMBER = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09129121191";
+  const PREMIUM_REQUESTS   = "premiumRequests";
+  const GCASH_NUMBER       = process.env.GCASH_NUMBER || global.config?.gcashNumber || "09129121191";
   const PREMIUM_PRICE_PHP  = 49;
   const PREMIUM_PRICE_USD  = 1.99;
-  const PREMIUM_DAYS = 30;
+  const PREMIUM_DAYS       = 30;
 
   async function isPremiumActive(uid) {
     if (!global.db) return false;
