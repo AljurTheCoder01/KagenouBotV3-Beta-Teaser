@@ -363,14 +363,22 @@ module.exports = function mountDashboard(app) {
           threadID:  VIRTUAL_THREAD,
           messageID: "vmsg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
         };
-        const msgEntry = {
+        if (!global._guestMessageStore) global._guestMessageStore = new Map();
+        global._guestMessageStore.set(fakeInfo.messageID, {
+          body: typeof body === "string" ? body.trim() : String(body || ""),
+          attachments: attachments.filter(Boolean),
+          edited: false,
+          unsent: false,
+        });
+                const msgEntry = {
           type:        "message",
           body:        typeof body === "string" ? body.trim() : String(body || ""),
           attachments: attachments.filter(Boolean),
           timestamp:   Date.now(),
           messageID:   fakeInfo.messageID,
+          edited:      false,
+          unsent:      false,
         };
-
         if (typeof callback === "function") {
           callback(null, fakeInfo);
           
@@ -420,8 +428,29 @@ module.exports = function mountDashboard(app) {
         return global.botApi?.getCurrentUserID ? global.botApi.getCurrentUserID() : String(uid);
       },
       changeNickname(n, t, p, cb)  { if (typeof cb === "function") cb(null); return Promise.resolve(); },
-      unsendMessage(messageID, cb) { if (typeof cb === "function") cb(null); return Promise.resolve(); },
-      markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Promise.resolve(); },
+      async unsendMessage(messageID, cb) {
+  if (!global._guestMessageStore) global._guestMessageStore = new Map();
+  global._guestMessageStore.set(String(messageID), {
+    ...( global._guestMessageStore.get(String(messageID)) || {} ),
+    unsent: true,
+    body: "",
+    attachments: [],
+  });
+  if (typeof cb === "function") cb(null);
+  return Promise.resolve();
+},
+      async editMessage(newBody, messageID, threadID, cb) {
+  if (!global._guestMessageStore) global._guestMessageStore = new Map();
+  const existing = global._guestMessageStore.get(String(messageID)) || {};
+  global._guestMessageStore.set(String(messageID), {
+    ...existing,
+    body: newBody,
+    edited: true,
+  });
+  if (typeof cb === "function") cb(null);
+  return Promise.resolve();
+},
+markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Promise.resolve(); },
       markAsDelivered(tid, mid, cb){ if (typeof cb === "function") cb(null); return Promise.resolve(); },
       listenMqtt()   { return { stopListening: () => {} }; },
       setOptions()   {},
@@ -789,7 +818,20 @@ module.exports = function mountDashboard(app) {
     }
   });
 
-  app.post("/guest/react", async (req, res) => {
+    app.get("/guest/message-state", (req, res) => {
+        const session = getGuestSession(req.headers["x-guest-token"]);
+        if (!session) return res.status(401).json({ ok: false });
+        if (!global._guestMessageStore) return res.json({ ok: true, messages: {} });
+        const out = {};
+        for (const [id, data] of global._guestMessageStore.entries()) {
+          if (data.edited || data.unsent) {
+            out[id] = { body: data.body || "", edited: !!data.edited, unsent: !!data.unsent };
+          }
+        }
+        return res.json({ ok: true, messages: out });
+      });
+      
+      app.post("/guest/react", async (req, res) => {
     const session = getGuestSession(req.headers["x-guest-token"]);
     if (!session) return res.status(401).json({ ok: false, error: "Not logged in." });
     const { messageID, reaction } = req.body || {};
