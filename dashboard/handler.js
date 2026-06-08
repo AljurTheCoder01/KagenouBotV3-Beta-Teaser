@@ -429,16 +429,16 @@ module.exports = function mountDashboard(app) {
       },
       changeNickname(n, t, p, cb)  { if (typeof cb === "function") cb(null); return Promise.resolve(); },
       async unsendMessage(messageID, cb) {
-  if (!global._guestMessageStore) global._guestMessageStore = new Map();
-  global._guestMessageStore.set(String(messageID), {
-    ...( global._guestMessageStore.get(String(messageID)) || {} ),
-    unsent: true,
-    body: "",
-    attachments: [],
-  });
-  if (typeof cb === "function") cb(null);
-  return Promise.resolve();
-},
+        if (!global._guestMessageStore) global._guestMessageStore = new Map();
+        global._guestMessageStore.set(String(messageID), {
+          ...(global._guestMessageStore.get(String(messageID)) || {}),
+          unsent: true,
+          body: "",
+          attachments: [],
+        });
+        if (typeof cb === "function") cb(null);
+        return Promise.resolve();
+      },
       async editMessage(newBody, messageID, threadID, cb) {
   if (!global._guestMessageStore) global._guestMessageStore = new Map();
   const existing = global._guestMessageStore.get(String(messageID)) || {};
@@ -590,17 +590,32 @@ markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Pr
   const trimmed = input.trim();
 
   const responseBuffer = [];
-  const vApi           = createVirtualApi(uid, responseBuffer);
+  const vApi  = createVirtualApi(uid, responseBuffer);
 
-  if (replyToMessageID) {
-    const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
-    if (handled) {
-      if (!responseBuffer.length) {
-        responseBuffer.push({ type: "message", body: "(Reply processed.)", attachments: [], timestamp: Date.now() });
+ if (replyToMessageID) {
+    const prefix = (global.config?.Prefix?.[0]) || "/";
+    const parts = trimmed.startsWith(prefix)
+      ? trimmed.slice(prefix.length).trim().split(/\s+/)
+      : trimmed.split(/\s+/);
+    const cmdNameCheck = parts[0]?.toLowerCase() || "";
+    const cmdCheck = global.commands?.get(cmdNameCheck);
+
+    const isReplyCmd = cmdCheck &&
+      (cmdCheck.config?.useReply === true ||
+       cmdCheck.config?.hasReply === true ||
+       cmdCheck.config?.name === "unsend" ||
+       (cmdCheck.name || cmdCheck.config?.name) === "unsend");
+
+    if (!isReplyCmd) {
+      const handled = await handleGuestReply(uid, replyToMessageID, trimmed, responseBuffer, vApi);
+      if (handled) {
+        if (!responseBuffer.length) {
+          responseBuffer.push({ type: "message", body: "(Reply processed.)", attachments: [], timestamp: Date.now() });
+        }
+        return responseBuffer;
       }
-      return responseBuffer;
+      return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
     }
-    return [{ type: "message", body: "⚠️ This reply is no longer active or has expired.", attachments: [], timestamp: Date.now() }];
   }
   
   let command = null;
@@ -651,7 +666,12 @@ markAsRead(threadID, cb)     { if (typeof cb === "function") cb(null); return Pr
     const fakeEvent = {
       type: "message", threadID: "guest_" + uid, senderID: String(uid),
       messageID: "vmsg_" + Date.now(), body, attachments: [], timestamp: Date.now(),
-      isGroup: false, messageReply: null,
+      isGroup: false,
+      messageReply: replyToMessageID ? {
+        messageID: replyToMessageID,
+        senderID:  vApi.getCurrentUserID(),
+        body:      "",
+      } : null,
     };
 
     try {
